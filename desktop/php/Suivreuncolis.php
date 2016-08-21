@@ -82,22 +82,24 @@ foreach (object::all() as $object) {
         </div>
         </div>
         <div class="form-group">
-        <label class="col-sm-3 control-label">Numero Transporteur</label>
+        <label class="col-sm-3 control-label">Transporteur</label>
         <div class="col-sm-3">
-            <input type="text" class="eqLogicAttr configuration form-control" data-l1key="configuration" data-l2key="transporteur" placeholder="N° Transporteur ou Laissez vide : automatique"
-              <br><br>
-             Chronopost : 06053 <br>
-             Colissimo  : 06052 <br>
-             TNT        : 100004 <br>
-             UPS        : 100002 <br>
-             La Poste   : 06051 <br>
-             DHL        : 100001 <br>
-             FEDEX      : 100003 <br>  
-           Colis Privée : colisprivee <br>  
-             
+
+        <select id="sel_object" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="transporteur">
+        <option value="">Automatique</option>
+                <option value='06053'>Chronopost</option>
+                <option value='06052'>Colissimo</option>
+                <option value='100004'>TNT</option>
+                <option value='100002'>UPS</option>
+                <option value='06051'>La Poste</option>
+                <option value='100001'>DHL</option>
+                <option value='100003'>FEDEX</option>
+                <option value='colisprivee'>Colis Privée</option>
+        </select>
+
         </div>
         </div>
-    
+
 </fieldset>
 </form>
 

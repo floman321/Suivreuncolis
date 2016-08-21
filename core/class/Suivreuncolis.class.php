@@ -23,28 +23,6 @@
         /*     * *************************Attributs****************************** */
         
         
-        /*
-        Code 0 : Introuvable
-        
-        Code 10 : En Transit
-        
-        Code 20 : Expiré
-        
-        Code 30 : Prêt pour être livré
-        Votre colis est arrivé dans un point de distribution locale.
-        Votre colis est en cours de livraison.
-        
-        Code 35 : Non Livré
-        Votre transporteur a tenté de livrer votre colis mais il n'a pu être livré. Contactez le transporteur pour de plus amples informations.
-        
-        Code 40 : Livré
-        Votre colis a été livré avec succès.
-        
-        Code 50 : Alerte
-        Il se peut que votre colis ait subi des conditions de transit inhabituelles (Douane, Refusé)
-        
-        */
-        
         public static function CodeToHTML($code) {
             
             switch ($code) {
@@ -114,12 +92,12 @@
                 
                 $codetraduit = Suivreuncolis::CodeToHTML($data['dat'][0]['track']['e']);
                 
-                return array($codetraduit , $data['dat'][0]['track']['z0']['c'] , $data['dat'][0]['track']['z0'][a] , $data['dat'][0]['track']['e'] );
+                return array($codetraduit , $data['dat'][0]['track']['z0']['c'] , $data['dat'][0]['track']['z0'][a] , $data['dat'][0]['track']['e'] , $data['dat'][0]['track']['z0']['z'] );
                 
             }else{
                 
                 log::add('Suivreuncolis', 'debug', 'httpok delay not ok');
-                return array("","","","");
+                return array("","","","","");
                 
             }
             
@@ -145,16 +123,16 @@
             
             
             if ( $etat_ == 'Votre colis a été livré') {
-                return array($etat_,'',$date_,40);
+                return array($etat_,'',$date_,40,'');
             }
             if ( $etat_ == 'Votre colis est en cours de livraison') {
-                return array($etat_,'',$date_,30);
+                return array($etat_,'',$date_,30,'');
             }
             if ( $etat_ == 'Votre colis est pris en charge par Colis Privé. Il va être expédié sur notre agence régionale') {
-                return array($etat_,'',$date_,10);
+                return array($etat_,'',$date_,10,'');
             }
             if ( $etat_ == 'Votre colis a été expédié par votre webmarchand, mais n a pas encore été pris en charge par Colis Privé') {
-                return array($etat_,'',$date_,10);
+                return array($etat_,'',$date_,10,'');
             }
             
             
@@ -178,13 +156,9 @@
                     $etat = '';
                     
                     if ($transnom == 'colisprivee'){
-                        
-                        list($etat,$lieu,$dateheure,$codeetat) = Suivreuncolis::ColisPriveeRecupere($numcolis);
-                        
+                        list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::ColisPriveeRecupere($numcolis);
                     }else{
-                        
-                        list($etat,$lieu,$dateheure,$codeetat) = Suivreuncolis::APIServices($numcolis,$transnom);
-                        
+                        list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::APIServices($numcolis,$transnom);
                     }
                     
                     if ($etat == '') {
@@ -215,6 +189,12 @@
                             
                             $cmd->setCollectDate('');
                             $cmd->event($codeetat);
+                        }
+                        
+                        if ($v == 'msgtransporteur'){
+                            
+                            $cmd->setCollectDate('');
+                            $cmd->event($msgtransporteur);
                         }
                         
                     }
@@ -249,10 +229,10 @@
                 
                 log::add('Suivreuncolis', 'debug', 'refreshdata');
                 
-                Suivreuncolis::MAJColis();
+                //Suivreuncolis::MAJColis();
             }
             
-            //Suivreuncolis::MAJColis();
+            Suivreuncolis::MAJColis();
             
         }
         
@@ -318,6 +298,16 @@
             $codeetat->setIsVisible(1);
             $codeetat->save();
             
+            $msgtransporteur = null;
+            $msgtransporteur = new SuivreuncolisCmd();
+            $msgtransporteur->setName('msgtransporteur');
+            $msgtransporteur->setEqLogic_id($this->getId());
+            $msgtransporteur->setSubType('string');
+            $msgtransporteur->setType('info');
+            $msgtransporteur->setIsHistorized(0);
+            $msgtransporteur->setIsVisible(1);
+            $msgtransporteur->save();
+            
         }
         
         public function preSave() {
@@ -363,9 +353,9 @@
             }
             
             
-            $mc = cache::byKey('ColisWidget' . jeedom::versionAlias($_version) . $this->getId());
-            if ($mc->getValue() != '') {
-                return preg_replace("/" . preg_quote(self::UIDDELIMITER) . "(.*?)" . preg_quote(self::UIDDELIMITER) . "/", self::UIDDELIMITER . mt_rand() . self::UIDDELIMITER, $mc->getValue());
+            $mc = cache::byKey('ColisWidget' . $_version . $this->getId() );
+            if ($mc->getValue() != '' && $mc->getOptions('#dateheure#','-') != '-') {              
+              return preg_replace("/" . preg_quote(self::UIDDELIMITER) . "(.*?)" . preg_quote(self::UIDDELIMITER) . "/", self::UIDDELIMITER . mt_rand() . self::UIDDELIMITER, $mc->getValue());
             }
              
             $html_forecast = '';
@@ -376,6 +366,7 @@
                              '#background_color#' => $this->getBackgroundColor($_version),
                              '#eqLink#' => $this->getLinkToConfiguration(),
                              );
+            
             
             
             
@@ -394,20 +385,6 @@
             $code = is_object($codeetat) ? $codeetat->execCmd() : '';
             $replace['#jauge#'] = $code;
             
-            
-            
-            $condition = $this->getCmd(null, 'condition_now');
-            $sunset_time = is_object($sunset) ? $sunset->execCmd() : null;
-            $sunrise_time = is_object($sunrise) ? $sunrise->execCmd() : null;
-            if (is_object($condition)) {
-                $replace['#icone#'] = self::getIconFromCondition($condition->execCmd(), $sunrise_time, $sunset_time);
-                $replace['#condition#'] = $condition->execCmd();
-                $replace['#collectDate#'] = $condition->getCollectDate();
-            } else {
-                $replace['#icone#'] = '';
-                $replace['#condition#'] = '';
-                $replace['#collectDate#'] = '';
-            }
             
             $replace['#name_display#'] = $this->getName();
             
