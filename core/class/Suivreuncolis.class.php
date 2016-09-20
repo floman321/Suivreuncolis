@@ -85,6 +85,7 @@
             log::add('Suivreuncolis', 'debug', 'httpok Numero colis '.$numsuivi.' '.$server_output);
             
             
+            
             curl_close ($ch);
             
             $data = json_decode($server_output, true);
@@ -441,7 +442,11 @@
         public function postSave() {
             
             Suivreuncolis::MAJColis();
+<<<<<<< HEAD
              
+=======
+            
+>>>>>>> origin/master
         }
         
         public function preUpdate() {
@@ -508,6 +513,7 @@
           
             $comment = $this->getConfiguration('commentaire','');
             $replace['#commentaire#'] = $comment;
+<<<<<<< HEAD
           
           
            switch ($code) {
@@ -539,6 +545,8 @@
                		$replace['#image#'] = "/plugins/Suivreuncolis/3rparty/problem.png";
                     break;
            }
+=======
+>>>>>>> origin/master
             
             
             
