@@ -90,7 +90,7 @@
             $data = json_decode($server_output, true);
           
             
-            if ($data['dat'][0]['delay'] == 0 ){
+            if ($data['dat'][0]['delay'] == 0 || $data['ret'] != 1){
                 
                 $codetraduit = Suivreuncolis::CodeToHTML($data['dat'][0]['track']['e']);
                 
@@ -98,13 +98,10 @@
                 
             }else{
                 
-                log::add('Suivreuncolis', 'debug', 'httpok delay not ok');
+                log::add('Suivreuncolis', 'debug', 'httpok delay not ok - saturation serveur');
                 return array("","","","","");
-                
             }
-            
         }
-        
         
         
         function multiexplode ($delimiters,$string) {
@@ -112,6 +109,7 @@
             $ready = str_replace($delimiters, $delimiters[0], $string);
             $launch = explode($delimiters[0], $ready);
             return  $launch;
+            
         }
         
         
@@ -440,7 +438,7 @@
         
         public function postSave() {
             
-            Suivreuncolis::MAJColis();
+           // Suivreuncolis::MAJColis();
              
         }
         
@@ -530,7 +528,7 @@
                     $replace['#image#'] = "/plugins/Suivreuncolis/3rparty/outfordelivery.png";
                     break;
                 case '35':
-                    $replace['#image#'] = "/plugins/Suivreuncolis/3rparty/problem.svg";
+                    $replace['#image#'] = "/plugins/Suivreuncolis/3rparty/problem.png";
                     break;
                 case '40':
                     $replace['#image#'] = "/plugins/Suivreuncolis/3rparty/livre.png";
