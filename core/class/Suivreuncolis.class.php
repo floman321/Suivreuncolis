@@ -27,25 +27,28 @@
             
             switch ($code) {
                 case 0:
-                    return "Introuvable";
+                    return "<b>Introuvable</b>";
+                    break;
+                case 5:
+                    return "<b>En attente de récupération par le transporteur</b>";
                     break;
                 case 10:
-                    return "En Transit";
+                    return "<b>En Transit</b><br>Votre colis a été remis au transporteur";
                     break;
                 case 20:
-                    return "Expiré";
+                    return "<b>Expiré</b>";
                     break;
                 case 30:
-                    return "Prêt pour être livré <br>Votre colis est arrivé dans un point de distribution locale.<br>Votre colis est en cours de livraison.;<br>";
+                    return "<b>Prêt pour être livré </b><br>Votre colis est arrivé dans un point de distribution locale.<br>Votre colis est en cours de livraison.;<br>";
                     break;
                 case 35:
-                    return "Non Livré<br>Votre transporteur a tenté de livrer votre colis mais il n'a pu être livré. Contactez le transporteur pour de plus amples informations.";
+                    return "<b>Non Livré</b><br>Votre transporteur a tenté de livrer votre colis mais il n'a pu être livré. Contactez le transporteur pour de plus amples informations.";
                     break;
                 case 40:
-                    return "Livré";
+                    return "<b>Livré</b>";
                     break;
                 case 50:
-                    return "Alerte<br>Il se peut que votre colis ait subi des conditions de transit inhabituelles (Douane, Refusé)";
+                    return "<b>Alerte !</b><br>Il se peut que votre colis ait subi des conditions de transit inhabituelles (Douane, Refusé)";
                     break;
                     
             }
@@ -79,16 +82,15 @@
                 return array("","","","");
             }
             
-            log::add('Suivreuncolis', 'debug', 'httpok '.$server_output);
+            log::add('Suivreuncolis', 'debug', 'httpok Numero colis '.$numsuivi.' '.$server_output);
+            
             
             curl_close ($ch);
             
             $data = json_decode($server_output, true);
+          
             
-            
-            if ($data['dat'][0]['track']['delay'] == 0){
-                
-                log::add('Suivreuncolis', 'debug', 'http delay ok ');
+            if ($data['dat'][0]['delay'] == 0 ){
                 
                 $codetraduit = Suivreuncolis::CodeToHTML($data['dat'][0]['track']['e']);
                 
@@ -110,6 +112,85 @@
             $ready = str_replace($delimiters, $delimiters[0], $string);
             $launch = explode($delimiters[0], $ready);
             return  $launch;
+        }
+        
+        
+        function AfterShipRecupere ($NumEnvoi,$Transporteur) {
+            
+            $apikey = config::byKey('api_aftership', 'suivreuncolis','');
+            
+            if ($apikey == ''){
+                log::add('Suivreuncolis', 'error', 'Api key Aftership manquante'.$apikey );
+                return array("","","","","");
+            }
+            
+            $ch = curl_init();
+            
+            log::add('Suivreuncolis', 'debug', 'httpdebug' . "https://api.aftership.com/v4/last_checkpoint/$Transporteur/$NumEnvoi");
+            
+            
+            curl_setopt($ch, CURLOPT_URL,"https://api.aftership.com/v4/last_checkpoint/$Transporteur/$NumEnvoi");
+            curl_setopt($curl_handle, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch,CURLOPT_HTTPHEADER,array('aftership-api-key: '.$apikey,'Content-Type: application/json'));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            
+            if( ! $server_output = curl_exec($ch)) {
+                
+                log::add('Suivreuncolis', 'debug', 'httperror' . "https://api.aftership.com/v4/last_checkpoint/$Transporteur/$NumEnvoi");
+                
+                return array("","","","");
+            }else{
+                
+                
+                $data = json_decode($server_output, true);
+                
+                if ($data['meta']['code'] == 200 ){
+                    
+                    $dh = str_replace('T00:00:00','',$data['data']['checkpoint']['checkpoint_time']);
+                    $msg = $data['data']['checkpoint']['message'];
+                    $lieu = $data['data']['checkpoint']['city'];
+                    $statusbrut = $data['data']['checkpoint']['tag'];
+               
+                    
+                    switch ($statusbrut) {
+                        case 'Pending':
+                            $codetat = 0;
+                            break;
+                        case 'InfoReceived':
+                            $codetat = 5;
+                            break;
+                        case 'InTransit':
+                            $codetat = 10;
+                            break;
+                        case 'OutForDelivery':
+                            $codetat = 30;
+                            break;
+                        case 'AttemptFail':
+                            $codetat = 35;
+                            break;
+                        case 'Delivered':
+                            $codetat = 40;
+                            break;
+                        case 'Exception':
+                            $codetat = 50;
+                            break;
+                        case 'Expired':
+                            $codetat = 20;
+                            break;
+                    }
+                 
+                    return array($msg,$lieu,$dh,$codetat,$msg);
+                    
+                }else{
+                    log::add('Suivreuncolis', 'debug', 'httpok code error'. $data['meta']['code'] . ' key = '.$apikey );
+                    return array("","","","","");
+                }
+                
+            }
+            
+            
+            return array('','','');
+            
         }
         
         
@@ -149,18 +230,27 @@
                 
                 if ($weather->getIsEnable() == 1) {
                     
-                    log::add('Suivreuncolis', 'info', 'loop '.$weather->getConfiguration('numsuivi',0));
-                    
                     $transnom = $weather->getConfiguration('transporteur','');
                     $numcolis = $weather->getConfiguration('numsuivi',0);
+                    $lecommentaire = $weather->getConfiguration('commentaire','');
+                    $transporteurAftership = $weather->getConfiguration('transaftership','');
                     $etat = '';
+                  
+                    if ($numcolis == '') continue;
                     
-                    if ($transnom == 'colisprivee'){
-                        list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::ColisPriveeRecupere($numcolis);
-                    }else{
-                        list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::APIServices($numcolis,$transnom);
+                    switch ($transnom) {
+                        case "colisprivee":
+                            list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::ColisPriveeRecupere($numcolis);
+                            break;
+                        case "aftership":
+                            list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::AfterShipRecupere($numcolis,$transporteurAftership);
+                            break;
+                        default:
+                            list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::APIServices($numcolis,$transnom);
+                            break;
                     }
                     
+                  
                     if ($etat == '') {
                         continue;
                     }
@@ -169,32 +259,55 @@
                         $v = $cmd->getName();
                         
                         if ($v == 'etat'){
-                            $cmd->setCollectDate('');
-                            $cmd->event($etat);
+                            if ($cmd->execCmd() != $etat){
+                               $cmd->setCollectDate('');
+                               $cmd->event($etat); 
+                            }
                         }
                         
                         if ($v == 'lieu'){
-                            
+                          
+                          if ($cmd->execCmd() != $lieu){                            
                             $cmd->setCollectDate('');
                             $cmd->event($lieu);
+                          }
+                          
                         }
                         
                         if ($v == 'dateheure'){
                             
+                          if ($cmd->execCmd() != $dateheure){
                             $cmd->setCollectDate('');
                             $cmd->event($dateheure);
+                          }
+                          
                         }
                         
                         if ($v == 'codeetat'){
                             
+                          if ($cmd->execCmd() != $codeetat){
                             $cmd->setCollectDate('');
                             $cmd->event($codeetat);
+                          }
+                          
                         }
                         
                         if ($v == 'msgtransporteur'){
                             
+                          if ($cmd->execCmd() != $msgtransporteur){
                             $cmd->setCollectDate('');
                             $cmd->event($msgtransporteur);
+                          }
+                          
+                        }
+                      
+                        if ($v == 'moncommentaire'){
+                            
+                          if ($cmd->execCmd() != $lecommentaire){
+                            $cmd->setCollectDate('');
+                            $cmd->event($lecommentaire);
+                          }
+                          
                         }
                         
                     }
@@ -223,15 +336,16 @@
         public static function cronHourly() {
             
             
-            $hour = date('H');
+           /* $hour = date('H');
             
             if ($hour % 2 == 0) {
                 
-                log::add('Suivreuncolis', 'debug', 'refreshdata');
+                
                 
                 //Suivreuncolis::MAJColis();
-            }
+            }*/
             
+            log::add('Suivreuncolis', 'debug', 'refreshdata');
             Suivreuncolis::MAJColis();
             
         }
@@ -307,6 +421,16 @@
             $msgtransporteur->setIsHistorized(0);
             $msgtransporteur->setIsVisible(1);
             $msgtransporteur->save();
+          
+            $moncommentaire = null;
+            $moncommentaire = new SuivreuncolisCmd();
+            $moncommentaire->setName('moncommentaire');
+            $moncommentaire->setEqLogic_id($this->getId());
+            $moncommentaire->setSubType('string');
+            $moncommentaire->setType('info');
+            $moncommentaire->setIsHistorized(0);
+            $moncommentaire->setIsVisible(1);
+            $moncommentaire->save();
             
         }
         
@@ -316,8 +440,8 @@
         
         public function postSave() {
             
-            //Suivreuncolis::MAJColis();
-            
+            Suivreuncolis::MAJColis();
+             
         }
         
         public function preUpdate() {
@@ -366,10 +490,7 @@
                              '#background_color#' => $this->getBackgroundColor($_version),
                              '#eqLink#' => $this->getLinkToConfiguration(),
                              );
-            
-            
-            
-            
+          
             
             $temperature = SuivreuncolisCmd::byEqLogicIdCmdName($this->getId(),'dateheure');
             $replace['#dateheure#'] = is_object($temperature) ? $temperature->execCmd() : '?';
@@ -384,8 +505,46 @@
             $codeetat = SuivreuncolisCmd::byEqLogicIdCmdName($this->getId(),'codeetat');
             $code = is_object($codeetat) ? $codeetat->execCmd() : '';
             $replace['#jauge#'] = $code;
+          
+            $comment = $this->getConfiguration('commentaire','');
+            $replace['#commentaire#'] = $comment;
+          
+          
+           switch ($code) {
+                case '':
+                   $replace['#image#'] = "/plugins/Suivreuncolis/3rparty/introuvable.png";
+                   break;
+                case '0':
+                    $replace['#image#'] = "/plugins/Suivreuncolis/3rparty/introuvable.png";
+                    break;
+                case '5':
+               		$replace['#image#'] = "/plugins/Suivreuncolis/3rparty/preparing.png";
+                    break;
+                case '10':
+                    $replace['#image#'] = "/plugins/Suivreuncolis/3rparty/transit.png";
+                    break;
+                case '20':
+                    $replace['#image#'] = "/plugins/Suivreuncolis/3rparty/introuvable.png";
+                    break;
+                case '30':
+                    $replace['#image#'] = "/plugins/Suivreuncolis/3rparty/outfordelivery.png";
+                    break;
+                case '35':
+                    $replace['#image#'] = "/plugins/Suivreuncolis/3rparty/problem.svg";
+                    break;
+                case '40':
+                    $replace['#image#'] = "/plugins/Suivreuncolis/3rparty/livre.png";
+                    break;
+                case '50':
+               		$replace['#image#'] = "/plugins/Suivreuncolis/3rparty/problem.png";
+                    break;
+           }
             
             
+            
+            $numsuivi = $this->getConfiguration('numsuivi','');
+            $replace['#lien#'] = 'https://track.aftership.com/'.$numsuivi;
+               
             $replace['#name_display#'] = $this->getName();
             
             $parameters = $this->getDisplay('parameters');
@@ -409,34 +568,10 @@
     }
     
     class SuivreuncolisCmd extends cmd {
-        /*     * *************************Attributs****************************** */
-        
-        
-        /*     * ***********************Methode static*************************** */
-        
-        
-        /*     * *********************Methode d'instance************************* */
-        
-        /*
-         * Non obligatoire permet de demander de ne pas supprimer les commandes même si elles ne sont pas dans la nouvelle configuration de l'équipement envoyé en JS
-         public function dontRemoveCmd() {
-         return true;
-         }
-         */
-        
+           
         public function execute($_options = array()) {
             
-            
-            
-            
         }
-        
-        
-        
-        
-        
-        
-        /*     * **********************Getteur Setteur*************************** */
     }
     
     ?>
