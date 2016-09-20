@@ -80,13 +80,21 @@ foreach (object::all() as $object) {
         <div class="col-sm-3">
             <input type="text" class="eqLogicAttr configuration form-control" data-l1key="configuration" data-l2key="numsuivi" placeholder="N° Suivi"/>
         </div>
-        </div>
+       </div>
+  
+       <div class="form-group">
+         <label class="col-sm-3 control-label">Commentaire</label>
+         <div class="col-sm-3">
+             <input type="text" class="eqLogicAttr configuration form-control" data-l1key="configuration" data-l2key="commentaire" placeholder="Destination, Nom du E-Commerce ..."/>
+         </div>
+       </div>
+  
         <div class="form-group">
         <label class="col-sm-3 control-label">Transporteur</label>
         <div class="col-sm-3">
 
         <select id="sel_object" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="transporteur">
-        <option value="">Automatique</option>
+                <option value="">17 Tracks Automatique</option>
                 <option value='06053'>Chronopost</option>
                 <option value='06052'>Colissimo</option>
                 <option value='100004'>TNT</option>
@@ -95,8 +103,16 @@ foreach (object::all() as $object) {
                 <option value='100001'>DHL</option>
                 <option value='100003'>FEDEX</option>
                 <option value='colisprivee'>Colis Privée</option>
+                <option value='aftership'>AfterShip</option>
         </select>
 
+        </div>
+        </div>
+
+        <div class="form-group">
+        <label class="col-sm-3 control-label">Transporteur AfterShip</label>
+        <div class="col-sm-3">
+            <input type="text" class="eqLogicAttr configuration form-control" data-l1key="configuration" data-l2key="transaftership" placeholder="Nom du transporteur en minuscule, Aftership uniquement "/>
         </div>
         </div>
 
