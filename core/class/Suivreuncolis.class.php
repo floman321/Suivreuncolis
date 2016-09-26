@@ -82,7 +82,7 @@
                 return array("","","","");
             }
             
-            log::add('Suivreuncolis', 'debug', 'httpok Numero colis '.$numsuivi.' '.$server_output);
+            //log::add('Suivreuncolis', 'debug', 'httpok Numero colis '.$numsuivi.' '.$server_output);
             
             
             curl_close ($ch);
@@ -90,7 +90,9 @@
             $data = json_decode($server_output, true);
           
             
-            if ($data['dat'][0]['delay'] == 0 || $data['ret'] != 1){
+            if ($data['dat'][0]['delay'] == 0  || $data['ret'] != '1'){
+                
+                log::add('Suivreuncolis', 'debug', ' Ok Numero colis essai 1 '.$numsuivi.' code '.$data['ret']);
                 
                 $codetraduit = Suivreuncolis::CodeToHTML($data['dat'][0]['track']['e']);
                 
@@ -98,10 +100,13 @@
                 
             }else{
                 
-                log::add('Suivreuncolis', 'debug', 'httpok delay not ok - saturation serveur');
+                log::add('Suivreuncolis', 'debug', 'httpok saturation not ok code erreur '.$data['ret'].'- delay '.$data['dat'][0]['delay']);
                 return array("","","","","");
+                
             }
+            
         }
+        
         
         
         function multiexplode ($delimiters,$string) {
@@ -109,7 +114,6 @@
             $ready = str_replace($delimiters, $delimiters[0], $string);
             $launch = explode($delimiters[0], $ready);
             return  $launch;
-            
         }
         
         
@@ -223,6 +227,7 @@
         
         public static function MAJColis() {
             
+          log::add('Suivreuncolis', 'debug', 'refreshdata');
             
             foreach (self::byType('Suivreuncolis') as $weather) {
                 
@@ -250,7 +255,27 @@
                     
                   
                     if ($etat == '') {
+                      
+                      
+                         log::add('Suivreuncolis', 'debug', 'refreshdata essai 2');
+                      
+                         switch ($transnom) {
+                        case "colisprivee":
+                            list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::ColisPriveeRecupere($numcolis);
+                            break;
+                        case "aftership":
+                            list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::AfterShipRecupere($numcolis,$transporteurAftership);
+                            break;
+                        default:
+                            list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::APIServices($numcolis,$transnom);
+                            break;
+                    	}
+                      
+                      
+                      if ($etat == '') {
+                                  log::add('Suivreuncolis', 'debug', 'refreshdata abandon essai 2');
                         continue;
+                      }
                     }
                     
                     foreach ($weather->getCmd() as $cmd) {
@@ -332,20 +357,27 @@
         
         //* Fonction exécutée automatiquement toutes les heures par Jeedom
         public static function cronHourly() {
+          
+          $hour = date('jH');
+          $nbfrequence = config::byKey('frequence', 'suivreuncolis',1);
+          $lastcheck = config::byKey('derniercheck', 'suivreuncolis','');
+          
+          
+          if ($lastcheck == ''){
+            $lastcheck = ($hour+$nbfrequence);
+            config::save('derniercheck', $lastcheck , 'suivreuncolis');
             
+          }
+          
+          $nouvelleheure = $lastcheck+$nbfrequence;
             
-           /* $hour = date('H');
-            
-            if ($hour % 2 == 0) {
-                
-                
-                
-                //Suivreuncolis::MAJColis();
-            }*/
-            
-            log::add('Suivreuncolis', 'debug', 'refreshdata');
-            Suivreuncolis::MAJColis();
-            
+          log::add('Suivreuncolis', 'debug', 'debug lastcheck : '.$lastcheck.' frq : '.$nbfrequence.' '.$nouvelleheure);
+          
+          if ($hour >= $nouvelleheure ) {
+            	Suivreuncolis::MAJColis(); 
+          	    config::save('derniercheck', $hour , 'suivreuncolis');
+          }
+          
         }
         
         
@@ -438,7 +470,7 @@
         
         public function postSave() {
             
-           // Suivreuncolis::MAJColis();
+            Suivreuncolis::MAJColis();
              
         }
         
