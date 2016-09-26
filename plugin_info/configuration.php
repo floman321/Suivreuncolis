@@ -31,5 +31,13 @@ if (!isConnect()) {
 <input class="configKey form-control" data-l1key="api_aftership" />
 </div>
 </div>
+    
+<div class="form-group">
+<label class="col-lg-4 control-label">Récupération Informations toutes les </label>
+<div class="col-lg-2">
+<input class="configKey form-control" data-l1key="frequence" placeholder="2" />  Heures
+</div>
+</div>
+  
 </fieldset>
 </form>
