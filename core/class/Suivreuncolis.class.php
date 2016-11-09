@@ -22,6 +22,7 @@
     class Suivreuncolis extends eqLogic {
         /*     * *************************Attributs****************************** */
         
+		
         
         public static function CodeToHTML($code) {
             
@@ -70,8 +71,7 @@
             }else{
                 curl_setopt($ch, CURLOPT_POSTFIELDS,'{"data":[{"num":"'.$numsuivi.'","fc":"'.$NumOperator.'"}]}');
             }
-            
-            
+                        
             // receive server response ...
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             
@@ -83,8 +83,7 @@
             }
             
             //log::add('Suivreuncolis', 'debug', 'httpok Numero colis '.$numsuivi.' '.$server_output);
-            
-            
+                        
             curl_close ($ch);
             
             $data = json_decode($server_output, true);
@@ -92,11 +91,13 @@
             
             if ($data['dat'][0]['delay'] == 0  || $data['ret'] != '1'){
                 
-                log::add('Suivreuncolis', 'debug', ' Ok Numero colis essai 1 '.$numsuivi.' code '.$data['ret']);
+                log::add('Suivreuncolis', 'debug', ' Ok Numero colis '.$numsuivi.' code '.$data['ret']);
                 
                 $codetraduit = Suivreuncolis::CodeToHTML($data['dat'][0]['track']['e']);
+              
+              //var_dump($data['dat'][0]['track']['z0']);
                 
-                return array($codetraduit , $data['dat'][0]['track']['z0']['c'] , $data['dat'][0]['track']['z0'][a] , $data['dat'][0]['track']['e'] , $data['dat'][0]['track']['z0']['z'] );
+                return array($codetraduit , $data['dat'][0]['track']['z0']['d'] . ', '.$data['dat'][0]['track']['z0']['c'] , $data['dat'][0]['track']['z0'][a] , $data['dat'][0]['track']['e'] , $data['dat'][0]['track']['z0']['z'] );
                 
             }else{
                 
@@ -117,7 +118,7 @@
         }
         
         
-        function AfterShipRecupere ($NumEnvoi,$Transporteur) {
+        function AfterShipRecupere ($NumEnvoi,$Transporteur,$postalcode = '') {
             
             $apikey = config::byKey('api_aftership', 'suivreuncolis','');
             
@@ -128,10 +129,17 @@
             
             $ch = curl_init();
             
-            log::add('Suivreuncolis', 'debug', 'httpdebug' . "https://api.aftership.com/v4/last_checkpoint/$Transporteur/$NumEnvoi");
+			$Transporteur = strtolower(str_replace(' ','',$Transporteur));
+			
             
             
-            curl_setopt($ch, CURLOPT_URL,"https://api.aftership.com/v4/last_checkpoint/$Transporteur/$NumEnvoi");
+            if ($postalcode != ''){
+				$postalcode = "?tracking_postal_code=".$postalcode;
+			}
+			
+			log::add('Suivreuncolis', 'debug', 'httpdebug' . "https://api.aftership.com/v4/last_checkpoint/$Transporteur/$NumEnvoi$postalcode");
+			
+            curl_setopt($ch, CURLOPT_URL,"https://api.aftership.com/v4/last_checkpoint/$Transporteur/$NumEnvoi$postalcode");
             curl_setopt($curl_handle, CURLOPT_CUSTOMREQUEST, 'GET');
             curl_setopt($ch,CURLOPT_HTTPHEADER,array('aftership-api-key: '.$apikey,'Content-Type: application/json'));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -153,7 +161,6 @@
                     $lieu = $data['data']['checkpoint']['city'];
                     $statusbrut = $data['data']['checkpoint']['tag'];
                
-                    
                     switch ($statusbrut) {
                         case 'Pending':
                             $codetat = 0;
@@ -198,7 +205,7 @@
         
         function ColisPriveeRecupere ($NumEnvoi) {
             
-            $source = file_get_contents('https://www.colisprive.com/moncolis/pages/detailColis.aspx?numColis='.$NumEnvoi);
+            $source = @file_get_contents('https://www.colisprive.com/moncolis/pages/detailColis.aspx?numColis='.$NumEnvoi);
             $exploded = Suivreuncolis::multiexplode(array('<td class="tdText">'),$source);
             
             list($date_) = explode('</td>',$exploded[1]);
@@ -222,31 +229,121 @@
             return array('','','');
             
         }
-        
-        
-        
-        public static function MAJColis() {
+		
+		function AliexpressShippingRecupere ($NumEnvoi) {
+			
+			//log::add('Suivreuncolis', 'debug', 'ALIEXPRESS '.$NumEnvoi);
             
-          log::add('Suivreuncolis', 'debug', 'refreshdata');
+            $source = @file_get_contents("http://global.cainiao.com/detail.htm?mailNoList=$NumEnvoi&spm=a3708.7860688.0.d01");
+			
+			$source = htmlspecialchars_decode ($source);
+			
+            $exploded = Suivreuncolis::multiexplode(array('<textarea style="display: none;" id="waybill_list_val_box">'),$source);
+            list($json) = explode('</textarea>',$exploded[1]);
+			
+			$data = json_decode($json, true);
+			
+			$etat_ = $data['data'][0]['latestTrackingInfo']['status'];
+			$date_ = $data['data'][0]['latestTrackingInfo']['time'];
+			$description = $data['data'][0]['latestTrackingInfo']['desc'];
+            
+			log::add('Suivreuncolis', 'debug', 'ALIEXPRESS '.$NumEnvoi.' '.$etat_);
+
+			
+			if ( $etat_ == 'SIGNIN_EXC') {
+                return array("Echec de livraison",'',$date_,35,$description);
+            }
+			
+			if ( $etat_ == 'SHIPPING') {
+                return array("Preparation de la commande ",'',$date_,5,$description);
+            }
+			
+			if ( $etat_ == 'ORDER_NOT_EXISTS' || $etat_ == 'NOT_LAZADA_ORDER') {
+                return array("Commande Introuvable",'',$date_,0,$description);
+            }
+			
+            if ( $etat_ == 'SIGNIN' || $etat_ == 'PICKEDUP') {
+                return array("Votre colis a été livré",'',$date_,40,$description);
+            }
+            if ( $etat_ == 'ARRIVED_AT_DEST_COUNTRY') {
+                return array("Arrivée dans le pays de destination",'',$date_,30,$description);
+            }
+            if ( $etat_ == 'DEPART_FROM_ORIGINAL_COUNTRY' || $etat_ == 'SHIPPING' ) {
+                return array("Votre colis est en cours de livraison ",'',$date_,10,$description);
+            }            
+            
+            return array($etat_,'',$date,10,$description);
+            
+        }
+        
+        function SkyRecupere($NumEnvoi) {
+            
+            $server_output = @file_get_contents('http://sky56.cn/track/track/result?tracking_number='.$NumEnvoi);
+            $data = json_decode($server_output, true);
+            
+            $lasttrack = $data['List']['Track']['z0']['Detail'][0];
+            
+            $date_ = $lasttrack["ondate"];
+            $etat_ = $lasttrack["status"];
+            $msg_  = $lasttrack["message"];
+            
+            
+            if ( $etat_ == 'votre colis a été livré en bo?te aux lettres') {
+                return array($etat_,'',$date_,40,$msg_);
+            }
+            if ( $etat_ == 'votre colis est en cours de livraison') {
+                return array($etat_,'',$date_,30,$msg_);
+            }
+            if ( $etat_ == 'votre colis est arrivé sur notre agence régionale') {
+                return array($etat_,'',$date_,10,$msg_);
+            }
+            if ( $etat_ == 'votre colis est pris en charge par colis privé. il va être expédié sur notre agence régionale') {
+                return array($etat_,'',$date_,10,$msg_);
+            }
+            if ( $etat_ == 'votre colis a été expédié par votre webmarchand, mais n a pas encore été pris en charge par colis privé') {
+                return array($etat_,'',$date_,10,$msg_);
+            }
+            
+            
+            return array($etat_,'',$date_,10,$msg_);
+            
+        }
+        
+        
+        
+        public static function MAJColis($idcolis) {
+            
+          log::add('Suivreuncolis', 'debug', 'refreshdata essai 1 '.$idcolis);
             
             foreach (self::byType('Suivreuncolis') as $weather) {
                 
                 if ($weather->getIsEnable() == 1) {
                     
+                    $nom = $weather->getName();
                     $transnom = $weather->getConfiguration('transporteur','');
                     $numcolis = $weather->getConfiguration('numsuivi',0);
                     $lecommentaire = $weather->getConfiguration('commentaire','');
                     $transporteurAftership = $weather->getConfiguration('transaftership','');
+					$cp = $weather->getConfiguration('cp_aftership','');
                     $etat = '';
                   
                     if ($numcolis == '') continue;
+                    
+                    
+                    log::add('Suivreuncolis', 'debug', 'refreshdata MAJColis essai 1 '.$transnom.' Nom Colis : '.$nom);
                     
                     switch ($transnom) {
                         case "colisprivee":
                             list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::ColisPriveeRecupere($numcolis);
                             break;
+                        case "sky56":
+                            list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::SkyRecupere($numcolis);
+                            break;
+					  case "aliexpress":
+                            list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::AliexpressShippingRecupere($numcolis);
+                            break;
                         case "aftership":
-                            list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::AfterShipRecupere($numcolis,$transporteurAftership);
+                            list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::AfterShipRecupere($numcolis,$transporteurAftership,$cp);
                             break;
                         default:
                             list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::APIServices($numcolis,$transnom);
@@ -255,13 +352,18 @@
                     
                   
                     if ($etat == '') {
+                                            
+                         log::add('Suivreuncolis', 'debug', 'refreshdata MAJColis essai 2 '.$transnom.' Nom Colis : '.$nom);
                       
-                      
-                         log::add('Suivreuncolis', 'debug', 'refreshdata essai 2');
-                      
-                         switch ($transnom) {
+                        switch ($transnom) {
                         case "colisprivee":
                             list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::ColisPriveeRecupere($numcolis);
+                            break;
+                        case "sky56":
+                            list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::SkyRecupere($numcolis);
+                            break;
+						case "aliexpress":
+                            list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::AliexpressShippingRecupere($numcolis);
                             break;
                         case "aftership":
                             list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::AfterShipRecupere($numcolis,$transporteurAftership);
@@ -273,7 +375,7 @@
                       
                       
                       if ($etat == '') {
-                                  log::add('Suivreuncolis', 'debug', 'refreshdata abandon essai 2');
+                                  log::add('Suivreuncolis', 'debug', 'ECHEC refreshdata abandon essai 2');
                         continue;
                       }
                     }
@@ -357,27 +459,9 @@
         
         //* Fonction exécutée automatiquement toutes les heures par Jeedom
         public static function cronHourly() {
-          
-          $hour = date('jH');
-          $nbfrequence = config::byKey('frequence', 'suivreuncolis',1);
-          $lastcheck = config::byKey('derniercheck', 'suivreuncolis','');
-          
-          
-          if ($lastcheck == ''){
-            $lastcheck = ($hour+$nbfrequence);
-            config::save('derniercheck', $lastcheck , 'suivreuncolis');
-            
-          }
-          
-          $nouvelleheure = $lastcheck+$nbfrequence;
-            
-          log::add('Suivreuncolis', 'debug', 'debug lastcheck : '.$lastcheck.' frq : '.$nbfrequence.' '.$nouvelleheure);
-          
-          if ($hour >= $nouvelleheure ) {
-            	Suivreuncolis::MAJColis(); 
-          	    config::save('derniercheck', $hour , 'suivreuncolis');
-          }
-          
+			         
+          Suivreuncolis::MAJColis(); 
+		  
         }
         
         
@@ -461,17 +545,70 @@
             $moncommentaire->setIsHistorized(0);
             $moncommentaire->setIsVisible(1);
             $moncommentaire->save();
-            
+			
+			
+			$refresh = null;
+            $refresh = new SuivreuncolisCmd();
+            $refresh->setName('Rafraichir');
+            $refresh->setEqLogic_id($this->getId());
+            $refresh->setSubType('other');
+			$refresh->setLogicalId('refresh');
+            $refresh->setType('action');
+            $refresh->setIsHistorized(0);
+            $refresh->setIsVisible(1);
+            $refresh->save();
+			            
+			
+		
         }
         
         public function preSave() {
+			
+		
+			
+			
             
         }
         
         public function postSave() {
-            
-            Suivreuncolis::MAJColis();
-             
+			
+			
+			$transnom = $this->getConfiguration('transporteur','');
+			
+			if ($transnom == "aftership"){
+				
+				$apikey = config::byKey('api_aftership', 'suivreuncolis','');
+				
+				if ($apikey == ''){
+					log::add('Suivreuncolis', 'error', 'Api key Aftership manquante'.$apikey );
+					return;
+				}
+				
+				
+				$nom = $this->getConfiguration('name','?');
+				$numcolis = $this->getConfiguration('numsuivi',0);
+				$lecommentaire = $this->getConfiguration('commentaire','');
+				$transporteurAftership = $this->getConfiguration('transaftership','');
+				$cp = $this->getConfiguration('cp_aftership','');
+				
+				$ch = curl_init();
+				curl_setopt($ch, CURLOPT_URL,"https://api.aftership.com/v4/trackings");
+				curl_setopt($ch, CURLOPT_POST, 1);
+				curl_setopt($ch, CURLOPT_POSTFIELDS,'{"tracking":{ "tracking_number":"'.$numcolis.'","tracking_postal_code":"'.$cp.'","slug":"'.$transporteurAftership.'","title":"'.$nom.'"}}');	
+				curl_setopt($ch, CURLOPT_HTTPHEADER,array('aftership-api-key: '.$apikey,'Content-Type: application/json'));
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+							
+				if( ! $server_output = curl_exec($ch)) {
+					
+					log::add('Suivreuncolis', 'debug', 'httperror '.$server_output);
+					
+				}else{
+					log::add('Suivreuncolis', 'debug', 'Enregistre ok'.$server_output );
+				}
+				
+				curl_close ($ch);
+			}
+			
         }
         
         public function preUpdate() {
@@ -509,7 +646,7 @@
             
             $mc = cache::byKey('ColisWidget' . $_version . $this->getId() );
             if ($mc->getValue() != '' && $mc->getOptions('#dateheure#','-') != '-') {              
-              return preg_replace("/" . preg_quote(self::UIDDELIMITER) . "(.*?)" . preg_quote(self::UIDDELIMITER) . "/", self::UIDDELIMITER . mt_rand() . self::UIDDELIMITER, $mc->getValue());
+				return preg_replace("/" . preg_quote(self::UIDDELIMITER) . "(.*?)" . preg_quote(self::UIDDELIMITER) . "/", self::UIDDELIMITER . mt_rand() . self::UIDDELIMITER, $mc->getValue());
             }
              
             $html_forecast = '';
@@ -538,8 +675,11 @@
           
             $comment = $this->getConfiguration('commentaire','');
             $replace['#commentaire#'] = $comment;
-          
-          
+			
+			$msgtransporteur = SuivreuncolisCmd::byEqLogicIdCmdName($this->getId(),'msgtransporteur');
+            $replace['#msgtransporteur#']  = is_object($msgtransporteur) ? $msgtransporteur->execCmd() : '';
+			
+			
            switch ($code) {
                 case '':
                    $replace['#image#'] = "/plugins/Suivreuncolis/3rparty/introuvable.png";
@@ -573,9 +713,20 @@
             
             
             $numsuivi = $this->getConfiguration('numsuivi','');
-            $replace['#lien#'] = 'https://track.aftership.com/'.$numsuivi;
-               
+			
+			$postalcode = $this->getConfiguration('cp','');
+			if ($postalcode != ''){
+				$postalcode = "?tracking_postal_code=".$postalcode;
+			}
+			
+            $replace['#lien#'] = 'https://track.aftership.com/'.$numsuivi.$postalcode;
             $replace['#name_display#'] = $this->getName();
+			
+			$refresh = SuivreuncolisCmd::byEqLogicIdCmdName($this->getId(),'Rafraichir');
+			if (is_object($refresh)) {
+				$replace['#refresh_id#'] = $refresh->getId();
+			}
+			
             
             $parameters = $this->getDisplay('parameters');
             if (is_array($parameters)) {
@@ -590,17 +741,18 @@
          
         }
         
-        
-        
-         
-        
-        /*     * **********************Getteur Setteur*************************** */
     }
     
     class SuivreuncolisCmd extends cmd {
            
         public function execute($_options = array()) {
             
+			if ($this->getType() == '') {
+			return '';
+			}
+			$eqLogic = $this->getEqlogic();
+			$eqLogic->MAJColis($eqLogic->getId());
+			
         }
     }
     

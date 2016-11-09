@@ -1,0 +1,11 @@
+Combien de temps faut t'il attendre pour obtenir les premiers données ?
+-> Jusqu'a 1 heure
+
+Est-ce que le plugin s’appuie sur des API tiers ?
+Oui , le site www.17track.net
+
+Est-ce que le plugin s’appuie sur des plugins tiers ?
+Non
+
+Est-ce que le plugin gère Mondial Relay ?
+Non
