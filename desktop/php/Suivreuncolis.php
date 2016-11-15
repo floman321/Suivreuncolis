@@ -107,15 +107,6 @@ foreach ($eqLogics as $eqLogic) {
 		</script>
 
         <select id="sel_object" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="transporteur" onchange="transporteurchange(this);">
-                <option value="">17 Tracks Automatique</option>
-                <option value='06053'>Chronopost</option>
-                <option value='06052'>Colissimo</option>
-                <option value='100004'>TNT</option>
-                <option value='100002'>UPS</option>
-                <option value='06051'>La Poste</option>
-                <option value='100001'>DHL</option>
-                <option value='100003'>FEDEX</option>
-                <option value='colisprivee'>Colis Privée</option>
                 <option value='aftership'>AfterShip</option>
                 <option value='sky56'>Sky56</option>
 				<option value='aliexpress'>AliExpress Shipping</option>
