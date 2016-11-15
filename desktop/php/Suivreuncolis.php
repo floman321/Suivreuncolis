@@ -78,7 +78,8 @@ foreach ($eqLogics as $eqLogic) {
        <div class="form-group">
         <label class="col-sm-3 control-label">Numéro Suivi</label>
         <div class="col-sm-3">
-            <input type="text" class="eqLogicAttr configuration form-control" data-l1key="configuration" data-l2key="numsuivi" placeholder="N° Suivi"/>
+            <input type="text" id="numcolis" class="eqLogicAttr configuration form-control" data-l1key="configuration" data-l2key="numsuivi" placeholder="N° Suivi"/ onblur="rechercher();">
+			
         </div>
        </div>
   
@@ -104,6 +105,35 @@ foreach ($eqLogics as $eqLogic) {
 				document.getElementById('aftership').style.display = 'none';
 			}
 		}
+		
+		function rechercher()
+		{
+			
+			
+			
+			$.ajax({
+			   type : 'POST', 
+			   headers: { 'aftership-api-key': '07ad3bb5-0ece-4f18-9bc5-5f685573038f' },
+			   url : 'https://api.aftership.com/v4/couriers/detect', 
+			   dataType : 'json',
+			   data : '{"tracking":{"tracking_number": "'+document.getElementById('numcolis').value+'"}}',
+			   success : function(resultat, statut){
+				   
+				    var cuisines = resultat.data.couriers;
+					var sel = document.getElementById('ListeTransporteurs');
+					//$("#ListeTransporteurs").empty();
+					for(var i = 0; i < cuisines.length; i++) {
+						var opt = document.createElement('option');
+						opt.innerHTML = cuisines[i].name;
+						opt.value = cuisines[i].slug;
+						if (i==0){opt.selected = true; }
+						sel.insertBefore(opt,sel[0]);
+					}
+					
+				}
+			});
+		}
+		   
 		</script>
 
         <select id="sel_object" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="transporteur" onchange="transporteurchange(this);">
@@ -116,13 +146,16 @@ foreach ($eqLogics as $eqLogic) {
         </div>
 		
 		<div id="aftership" style="display:none;">
+		
 			<h3>AfterShip</h3>
-			<p>Le colis sera créé automatiquement dans AfterShip</p>
-
+			
+			<p>Vous devez avoir une cle API pour utiliser ce service (voir <a href='https://secure.aftership.com/apps/api'>https://secure.aftership.com/apps/api</a>)
+			</br>Le colis sera créé/supprimer automatiquement dans AfterShip</p>
+			
 			<div class="form-group">
 			<label class="col-sm-3 control-label">Transporteur AfterShip</label>
 			<div class="col-sm-3">
-				<select id="sel_object" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="transaftership">
+				<select id="ListeTransporteurs" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="transaftership">
 					<option value='26390'>4-72 Entregando</option>
 					<option value='17postservice'>17 Post Service</option>
 					<option value='2go'>2GO</option>
