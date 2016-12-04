@@ -31,5 +31,21 @@ if (!isConnect()) {
 <input class="configKey form-control" data-l1key="api_aftership" />
 </div>
 </div>
+    
+<div class="form-group">
+<label class="col-lg-4 control-label">Notifier les changements par : </label>
+<div class="col-lg-2">
+<select class="configKey form-control" data-l1key="notificationpar">
+					<option value="">Aucun</option>
+                    <option value="jeedom_msg">Message jeedom</option>
+                    <option value="cmd">Commande jeedom Action  </option>
+  </select>
+  <br> 
+  <p>ID commande Action avec type message :</p>
+  <input class="configKey form-control" data-l1key="cmd_notif" placeholder="N° de commande jeedom"/>
+</div>  
+
+</div>
+  
 </fieldset>
 </form>
