@@ -81,8 +81,10 @@
             
             
             if ($postalcode != ''){
-				$postalcode = "?tracking_postal_code=".$postalcode;
-			}
+				$postalcode = "?tracking_postal_code=".$postalcode."&lang=en";
+			}else{
+ 	             $postalcode = "?lang=en";
+            }
 			
 			log::add('Suivreuncolis', 'debug', 'httpdebug' . "https://api.aftership.com/v4/trackings/$Transporteur/$NumEnvoi$postalcode");
 			
@@ -107,8 +109,7 @@
                     $nbtotal = count($data['data']['tracking']['checkpoints']) -1;
                   
                     $monitem = $data['data']['tracking']['checkpoints'][$nbtotal];
-                  
-                  
+                                    
    	                log::add('Suivreuncolis', 'debug', ' debug nb occurence '.$nbtotal.' '.$monitem['checkpoint_time']);
 
                     $dh = str_replace('T00:00:00','',$monitem['checkpoint_time']);
@@ -351,6 +352,85 @@
                 }
              
         }
+      
+      
+        public static function importAfterShip(){
+          
+          $apikey = config::byKey('api_aftership', 'suivreuncolis','');
+				
+				if ($apikey == ''){
+					log::add('Suivreuncolis', 'error', 'Api key Aftership manquante'.$apikey );
+					return '';
+				}
+          
+            
+           log::add('Suivreuncolis', 'debug', ' importAfterShip ');
+          
+            $ch = curl_init();
+          
+            curl_setopt($ch, CURLOPT_URL,"https://api.aftership.com/v4/trackings");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch,CURLOPT_HTTPHEADER,array('aftership-api-key: '.$apikey,'Content-Type: application/json'));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            
+            if( ! $server_output = curl_exec($ch)) {
+                
+                log::add('Suivreuncolis', 'debug', 'httperror' . "https://api.aftership.com/v4/trackings ".curl_error($ch));
+                
+                return '';
+            }else{
+              
+                $data = json_decode($server_output, true);
+              
+              	if ($data['meta']['code'] == 200 ){
+                  
+                  $mescolis = $data['data']['trackings'];
+                  
+                    foreach ($mescolis as $moncolis){
+                      
+                      //tracking_number, slug
+                      log::add('Suivreuncolis', 'debug', ' => colis trouvé dans AfterShip'.$moncolis['tracking_number']);
+                      
+                      if (eqLogic::byTypeAndSearhConfiguration('Suivreuncolis','"numsuivi":"'.$moncolis['tracking_number'].'"') == null){
+                                          
+                        $mynewcolis = null;
+                        $mynewcolis = new self();
+                        $mynewcolis->setConfiguration('numsuivi',$moncolis['tracking_number']);
+                        $mynewcolis->setConfiguration('transporteur','aftership');
+                        $mynewcolis->setConfiguration('transaftership',$moncolis['slug']);
+                        $mynewcolis->setConfiguration('cp_aftership',$moncolis['tracking_postal_code']);
+                        $mynewcolis->setConfiguration('autocreate',0);
+                        
+                        if ($moncolis['title'] != ''){
+                        	$mynewcolis->setName($moncolis['title']);
+                        }else{
+                          	$mynewcolis->setName($moncolis['tracking_number']);
+                        }
+                        
+                        $mynewcolis->setIsEnable(1);
+                        $mynewcolis->setIsVisible(1);
+                        $mynewcolis->setEqType_name('Suivreuncolis');
+                        
+                        $objetpardefaut = config::byKey('objetpardefaut', 'suivreuncolis','');
+                        if ( $objetpardefaut == ''){
+                        }else{
+                          $mynewcolis->setObject_id($objetpardefaut);
+                        }
+                        
+                        $mynewcolis->save();
+                        
+                        $mynewcolis->toHtml('dashboard');
+                    	$mynewcolis->refreshWidget();
+                      }
+                      
+                    }
+                }
+            }
+          
+          Suivreuncolis::MAJColis(); 
+          
+          return 'ok';
+        }
         
         
         /*     * ***********************Methode static*************************** */
@@ -382,11 +462,18 @@
         /*     * *********************Méthodes d'instance************************* */
         
         public function preInsert() {
-            
+             
+          $objetpardefaut = config::byKey('objetpardefaut', 'suivreuncolis','');
+            if ( $objetpardefaut == ''){
+            }else{
+              $this->setObject_id($objetpardefaut);
+            }
+          
         }
         
         public function postInsert() {
             
+            $mynewcolis = new Suivreuncolis();
             
             $mode = null;
             $mode = new SuivreuncolisCmd();
@@ -462,9 +549,7 @@
             $refresh->setIsHistorized(0);
             $refresh->setIsVisible(1);
             $refresh->save();
-			            
-			
-		
+          
         }
         
         public function preSave() {
@@ -479,8 +564,9 @@
 			
 			
 			$transnom = $this->getConfiguration('transporteur','');
-			
-			if ($transnom == "aftership"){
+            $autcreation = $this->getConfiguration('autocreate','1');
+            
+			if ($transnom == "aftership" && $autcreation != '0'){
 				
 				$apikey = config::byKey('api_aftership', 'suivreuncolis','');
 				
@@ -488,7 +574,6 @@
 					log::add('Suivreuncolis', 'error', 'Api key Aftership manquante'.$apikey );
 					return;
 				}
-				
 				
 				$nom = $this->getConfiguration('name','?');
 				$numcolis = $this->getConfiguration('numsuivi',0);

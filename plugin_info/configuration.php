@@ -21,6 +21,7 @@ if (!isConnect()) {
     include_file('desktop', '404', 'php');
     die();
 }
+
 ?>
 
 <form class="form-horizontal">
@@ -31,6 +32,26 @@ if (!isConnect()) {
 <input class="configKey form-control" data-l1key="api_aftership" />
 </div>
 </div>
+  
+<div class="form-group">
+<label class="col-lg-4 control-label">A la création d'un colis, l' objet parent est : </label>
+<div class="col-lg-2">
+    
+  <select class="configKey form-control" data-l1key="objetpardefaut">
+  	<option value="">Aucun</option>
+  
+  <?php
+    $allObject = object::all(true);
+
+    foreach ($allObject as $object_li) {
+       echo '<option value="'.$object_li->getId().'">'. $object_li->getHumanName(true) . '</option>';
+    }
+  ?>
+     </select>
+  
+</div>
+</div>
+
     
 <div class="form-group">
 <label class="col-lg-4 control-label">Notifier les changements par : </label>
