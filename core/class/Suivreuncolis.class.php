@@ -112,7 +112,7 @@
                                     
    	                log::add('Suivreuncolis', 'debug', ' debug nb occurence '.$nbtotal.' '.$monitem['checkpoint_time']);
 
-                    $dh = str_replace('T00:00:00','',$monitem['checkpoint_time']);
+                    $dh = str_replace('T',' ',str_replace('T00:00:00','',$monitem['checkpoint_time']));
                     $msg = $monitem['message'];
                     $lieu = $monitem['location'];
                     $statusbrut = $monitem['tag'];
@@ -290,7 +290,7 @@
                               
                                if ($notif == "cmd"){
                                    $cmd_notif = config::byKey('cmd_notif', 'suivreuncolis','');
-                                   //message::add('Suivreuncolis','Mail -> Nouvelle etat du colis N°'.$numcolis.' '.$lecommentaire.' '.$msgtransporteur.' => '.$etat );
+                                   message::add('Suivreuncolis','Message -> Nouvelle etat du colis N°'.$numcolis.' '.$lecommentaire.' '.$msgtransporteur.' | '.$cmd->execCmd().' '.$etat );
                                    $option = array('title' => 'Alerte Nouvelle etat colis N°'.$numcolis, 'message' => 'Nouvelle etat du colis N°'.$numcolis.' '.$lecommentaire.' '.$msgtransporteur.' - '.$etat);
                                    cmd::byId($cmd_notif)->execCmd($option);
 							   }
@@ -364,7 +364,7 @@
 				}
           
             
-           log::add('Suivreuncolis', 'debug', ' importAfterShip ');
+           //log::add('Suivreuncolis', 'debug', ' importAfterShip ');
           
             $ch = curl_init();
           
@@ -388,11 +388,10 @@
                   
                     foreach ($mescolis as $moncolis){
                       
-                      //tracking_number, slug
-                      log::add('Suivreuncolis', 'debug', ' => colis trouvé dans AfterShip'.$moncolis['tracking_number']);
-                      
                       if (eqLogic::byTypeAndSearhConfiguration('Suivreuncolis','"numsuivi":"'.$moncolis['tracking_number'].'"') == null){
-                                          
+                                     
+                        log::add('Suivreuncolis', 'debug', ' => Importation 1 colis depuis AfterShip'.$moncolis['tracking_number']);
+                        
                         $mynewcolis = null;
                         $mynewcolis = new self();
                         $mynewcolis->setConfiguration('numsuivi',$moncolis['tracking_number']);
