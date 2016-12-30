@@ -285,12 +285,11 @@
                             if ($cmd->execCmd() != $etat){
 								
 							   if ($notif == "jeedom_msg"){
-                                   message::add('Suivreuncolis','Message -> Nouvelle etat du colis N°'.$numcolis.' '.$lecommentaire.' '.$msgtransporteur.' => '.$etat );
+                                   message::add('Suivreuncolis','Message -> Nouvelle etat du colis N°'.$numcolis.' '.$lecommentaire.' '.$msgtransporteur.' | '.$cmd->execCmd().' '.$etat );
 							   }
                               
                                if ($notif == "cmd"){
                                    $cmd_notif = config::byKey('cmd_notif', 'suivreuncolis','');
-                                   message::add('Suivreuncolis','Message -> Nouvelle etat du colis N°'.$numcolis.' '.$lecommentaire.' '.$msgtransporteur.' | '.$cmd->execCmd().' '.$etat );
                                    $option = array('title' => 'Alerte Nouvelle etat colis N°'.$numcolis, 'message' => 'Nouvelle etat du colis N°'.$numcolis.' '.$lecommentaire.' '.$msgtransporteur.' - '.$etat);
                                    cmd::byId($cmd_notif)->execCmd($option);
 							   }
