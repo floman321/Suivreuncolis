@@ -64,9 +64,27 @@ if (!isConnect()) {
   <br> 
   <p>ID commande Action avec type message :</p>
   <input class="configKey form-control" data-l1key="cmd_notif" placeholder="N° de commande jeedom"/>
-</div>  
+</div>
+
+
+
 
 </div>
+
+
   
 </fieldset>
+
+
+
 </form>
+
+<h3>Importations Automatiques des colis chez AfterShip</h3>
+<p>
+Pour l'instant il faut mettre dans le moteur de taches manuellement (menu roue crantées en à droite)<br>
+Bouton Ajouter puis<br>
+Classe : Suivreuncolis<br>
+Fonction : importAfterShip<br>
+TimeOut : 5<br>
+Cron : Une fois par Jour donc : 00 00 * * * *<br>
+</p>
