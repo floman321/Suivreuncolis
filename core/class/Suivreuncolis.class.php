@@ -693,12 +693,23 @@
             $lieu = SuivreuncolisCmd::byEqLogicIdCmdName($this->getId(),'lieu');
             $replace['#lieu#'] = is_object($lieu) ? $lieu->execCmd() : '';
             
+            if ($replace['#lieu#'] != ''){
+                $replace['#lieu#'] = '<p><i class="fa fa-location-arrow cursor"></i> '.$replace['#lieu#'].'</p>';
+            }
+            
             
             $codeetat = SuivreuncolisCmd::byEqLogicIdCmdName($this->getId(),'codeetat');
             $code = is_object($codeetat) ? $codeetat->execCmd() : '';
             $replace['#jauge#'] = $code;
           
             $comment = $this->getConfiguration('commentaire','');
+            
+            if ($comment == ''){
+                $comment = "";
+            }else{
+                $comment = '<p><i class="fa fa-pencil cursor"></i>$comment</p>';
+            }
+            
             $replace['#commentaire#'] = $comment;
 			
 			$msgtransporteur = SuivreuncolisCmd::byEqLogicIdCmdName($this->getId(),'msgtransporteur');
