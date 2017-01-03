@@ -34,7 +34,7 @@ if (!isConnect()) {
 </div>
   
 <div class="form-group">
-<label class="col-lg-4 control-label">A la création d'un colis, l' objet parent est : </label>
+<label class="col-lg-4 control-label">A la création d'un colis, l'objet parent est : </label>
 <div class="col-lg-2">
     
   <select class="configKey form-control" data-l1key="objetpardefaut">
