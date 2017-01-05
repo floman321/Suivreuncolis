@@ -707,7 +707,7 @@
             if ($comment == ''){
                 $comment = "";
             }else{
-                $comment = '<p><i class="fa fa-pencil cursor"></i>'.$comment.'</p>';
+                $comment = '<p><i class="fa fa-pencil cursor"></i> '.$comment.'</p>';
             }
             
             $replace['#commentaire#'] = $comment;
