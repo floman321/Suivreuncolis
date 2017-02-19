@@ -20,18 +20,29 @@ foreach ($eqLogics as $eqLogic) {
            </ul>
        </div>
    </div>
+<div class="col-lg-10 col-md-9 col-sm-8 eqLogicThumbnailDisplay" style="border-left: solid 1px #EEE; padding-left: 25px;">
+   <legend><i class="fa fa-cog"></i>  {{Gestion}}</legend>
+  <div class="eqLogicThumbnailContainer">
+		<div class="cursor eqLogicAction" data-action="add" style="background-color : #ffffff; height : 140px;margin-bottom : 10px;padding : 5px;border-radius: 2px;width : 160px;margin-left : 10px;" >
+        <center>
+          <i class="fa fa-plus-circle" style="font-size : 5em;color:#00979c;"></i>
+        </center>
+        <span style="font-size : 1.1em;position:relative; top : 15px;word-break: break-all;white-space: pre-wrap;word-wrap: break-word;color:#00979c"><center>Ajouter</center></span>
+      </div>
 
+      <div class="cursor eqLogicAction" data-action="gotoPluginConf" style="background-color : #ffffff; height : 140px;margin-bottom : 10px;padding : 5px;border-radius: 2px;width : 160px;margin-left : 10px;">
+        <center>
+          <i class="fa fa-wrench" style="font-size : 5em;color:#767676;"></i>
+        </center>
+        <span style="font-size : 1.1em;position:relative; top : 15px;word-break: break-all;white-space: pre-wrap;word-wrap: break-word;color:#767676"><center>{{Configuration}}</center></span>
+      </div>
+	  </div>
+	  </div>
    <div class="col-lg-10 col-md-9 col-sm-8 eqLogicThumbnailDisplay" style="border-left: solid 1px #EEE; padding-left: 25px;">
-    <legend>Mes Suivis</legend>
+  <legend><i class="icon divers-mailbox15"></i> Mes Suivis</legend>
 
     <div class="eqLogicThumbnailContainer">
-      <div class="cursor eqLogicAction" data-action="add" style="background-color : #ffffff; height : 200px;margin-bottom : 10px;padding : 5px;border-radius: 2px;width : 160px;margin-left : 10px;" >
-         <center>
-            <i class="fa fa-plus-circle" style="font-size : 7em;color:#94ca02;"></i>
-        </center>
-        <span style="font-size : 1.1em;position:relative; top : 23px;word-break: break-all;white-space: pre-wrap;word-wrap: break-word;color:#94ca02"><center>{{Ajouter}}</center></span>
-    </div>
-    <?php
+     <?php
 foreach ($eqLogics as $eqLogic) {
 	echo '<div class="eqLogicDisplayCard cursor" data-eqLogic_id="' . $eqLogic->getId() . '" style="background-color : #ffffff; height : 200px;margin-bottom : 10px;padding : 5px;border-radius: 2px;width : 160px;margin-left : 10px;" >';
 	echo "<center>";
@@ -43,12 +54,22 @@ foreach ($eqLogics as $eqLogic) {
 ?>
 </div>
 </div>
-
 <div class="col-lg-10 col-md-9 col-sm-8 eqLogic" style="border-left: solid 1px #EEE; padding-left: 25px;display: none;">
+ <a class="btn btn-success eqLogicAction pull-right" data-action="save"><i class="fa fa-check-circle"></i> {{Sauvegarder}}</a>
+ <a class="btn btn-danger eqLogicAction pull-right" data-action="remove"><i class="fa fa-minus-circle"></i> {{Supprimer}}</a>
+ <a class="btn btn-default eqLogicAction pull-right" data-action="configure"><i class="fa fa-cogs"></i> {{Configuration avancée}}</a>
+ <ul class="nav nav-tabs" role="tablist">
+  <li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay"><i class="fa fa-arrow-circle-left"></i></a></li>
+  <li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fa fa-tachometer"></i> {{Equipement}}</a></li>
+    <li role="presentation"><a href="#commandtab" aria-controls="profile" role="tab" data-toggle="tab"><i class="fa fa-list-alt"></i> {{Commandes}}</a></li>
+</ul>
+<div class="tab-content" style="height:calc(100% - 50px);overflow:auto;overflow-x: hidden;">
+  <div role="tabpanel" class="tab-pane active" id="eqlogictab">
+    <br/>
+
     <form class="form-horizontal">
         <fieldset>
-            <legend><i class="fa fa-arrow-circle-left eqLogicAction cursor" data-action="returnToThumbnailDisplay"></i> {{Général}}  <i class='fa fa-cogs eqLogicAction pull-right cursor expertModeVisible' data-action='configure'></i></legend>
-            <div class="form-group">
+                <div class="form-group">
                 <label class="col-sm-3 control-label">{{Nom du colis}}</label>
                 <div class="col-sm-3">
                     <input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display : none;" />
@@ -533,35 +554,29 @@ foreach ($eqLogics as $eqLogic) {
             <input type="text" class="eqLogicAttr configuration form-control" data-l1key="configuration" data-l2key="cp_aftership" placeholder="Code Postal destination "/>
         </div>
         </div>
-		
 		</div>
-
-</fieldset>
-</form>
-
-<legend>Mes informations</legend>
-<a class="btn btn-success btn-sm cmdAction" data-action="add"><i class="fa fa-plus-circle"></i> {{Commandes}}</a><br/><br/>
-<table id="table_cmd" class="table table-bordered table-condensed">
+     </fieldset>
+    </form>
+	</div>
+<div role="tabpanel" class="tab-pane" id="commandtab">
+  <br/><br/>
+  <a class="btn btn-success btn-sm cmdAction pull-left" data-action="add" style="margin-top:5px;"><i class="fa fa-plus-circle"></i> {{Ajouter une commande}}</a>
+    <br/><br/>
+<table id="table_cmd" class="table table-bordered table-condensed" style="word-break: break-all;">
     <thead>
-        <tr>
-            <th>{{Nom}}</th><th>{{Type}}</th><th>{{Action}}</th>
-        </tr>
+      <tr>
+			<th>{{Nom}}</th>
+			<th>{{Type}}</th>
+			<th>{{Action}}</th>
+    </tr>
     </thead>
     <tbody>
-    </tbody>
-</table>
+ 
+  </div>
+  </div>
+  </div>
+  </div>
 
-<form class="form-horizontal">
-    <fieldset>
-        <div class="form-actions">
-            <a class="btn btn-danger eqLogicAction" data-action="remove"><i class="fa fa-minus-circle"></i> {{Supprimer}}</a>
-            <a class="btn btn-success eqLogicAction" data-action="save"><i class="fa fa-check-circle"></i> {{Sauvegarder}}</a>
-        </div>
-    </fieldset>
-</form>
-
-</div>
-</div>
 
 <?php include_file('desktop', 'Suivreuncolis', 'js', 'Suivreuncolis');?>
 <?php include_file('core', 'plugin.template', 'js');?>
