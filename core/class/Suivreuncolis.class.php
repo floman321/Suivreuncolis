@@ -1,4 +1,4 @@
-<?php
+    <?php
     
     /* This file is part of Jeedom.
      *
@@ -24,37 +24,6 @@
         
 		
         
-        public static function CodeToHTML($code) {
-            
-            switch ($code) {
-                case 0:
-                    return "<b>Introuvable</b>";
-                    break;
-                case 5:
-                    return "<b>En attente de récupération par le transporteur</b>";
-                    break;
-                case 10:
-                    return "<b>En Transit</b><br>Votre colis a été remis au transporteur";
-                    break;
-                case 20:
-                    return "<b>Expiré</b>";
-                    break;
-                case 30:
-                    return "<b>Prêt pour être livré </b><br>Votre colis est arrivé dans un point de distribution locale.<br>Votre colis est en cours de livraison.;<br>";
-                    break;
-                case 35:
-                    return "<b>Non Livré</b><br>Votre transporteur a tenté de livrer votre colis mais il n'a pu être livré. Contactez le transporteur pour de plus amples informations.";
-                    break;
-                case 40:
-                    return "<b>Livré</b>";
-                    break;
-                case 50:
-                    return "<b>Alerte !</b><br>Il se peut que votre colis ait subi des conditions de transit inhabituelles (Douane, Refusé)";
-                    break;
-                    
-            }
-            
-        }
 
         
         function multiexplode ($delimiters,$string) {
@@ -285,7 +254,7 @@
                             if ($cmd->execCmd() != $etat){
 								
 							   if ($notif == "jeedom_msg"){
-                                   message::add('Suivreuncolis','Message -> Nouvelle etat du colis N°'.$numcolis.' '.$lecommentaire.' '.$msgtransporteur.' | '.$cmd->execCmd().' '.$etat );
+                                   message::add('Suivreuncolis','Message -> Nouvelle etat du colis N°'.$numcolis.' '.$lecommentaire.' '.$msgtransporteur.' | '.$cmd->getValue().' => '.$etat );
 							   }
                               
                                if ($notif == "cmd"){
@@ -655,25 +624,26 @@
         
         public function toHtml($_version = 'dashboard') {
             
-         
             if ($this->getIsEnable() != 1) {
                 return '';
             }
             if (!$this->hasRight('r')) {
                 return '';
             }
+          
+            
+            $replace = $this->preToHtml($_version);
+            if (!is_array($replace)) {
+                return $replace;
+            }
+          
+          
             
             $version = jeedom::versionAlias($_version);
             if ($this->getDisplay('hideOn' . $version) == 1) {
                 return '';
             }
-            
-            
-            $mc = cache::byKey('ColisWidget' . $_version . $this->getId() );
-            if ($mc->getValue() != '' && $mc->getOptions('#dateheure#','-') != '-') {              
-				return preg_replace("/" . preg_quote(self::UIDDELIMITER) . "(.*?)" . preg_quote(self::UIDDELIMITER) . "/", self::UIDDELIMITER . mt_rand() . self::UIDDELIMITER, $mc->getValue());
-            }
-             
+                         
             $html_forecast = '';
             
             $replace = array(
@@ -707,7 +677,7 @@
             if ($comment == ''){
                 $comment = "";
             }else{
-                $comment = '<p><i class="fa fa-pencil cursor"></i>$comment</p>';
+                $comment = '<p><i class="fa fa-pencil cursor"></i>'.$comment.'</p>';
             }
             
             $replace['#commentaire#'] = $comment;
@@ -767,23 +737,22 @@
 			}
 			
 			
-            $parameters = $this->getDisplay('parameters');
+            /*$parameters = $this->getDisplay('parameters');
             if (is_array($parameters)) {
                 foreach ($parameters as $key => $value) {
                     $replace['#' . $key . '#'] = $value;
                 }
-            }
-            
-            $html = template_replace($replace, getTemplate('core', $_version, 'colis', 'Suivreuncolis'));
-            cache::set('ColisWidget' . $_version . $this->getId(), $html, 0);
-            return $html;
+            }*/
+                      
+          
+            return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, 'colis', 'Suivreuncolis')));
          
         }
         
     }
     
     class SuivreuncolisCmd extends cmd {
-           
+           /*
         public function execute($_options = array()) {
             
 			if ($this->getType() == '') {
@@ -792,7 +761,7 @@
 			$eqLogic = $this->getEqlogic();
 			$eqLogic->MAJColis($eqLogic->getId());
 			
-        }
+        }*/
     }
     
     ?>
