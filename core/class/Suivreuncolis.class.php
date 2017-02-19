@@ -752,7 +752,7 @@
     }
     
     class SuivreuncolisCmd extends cmd {
-           /*
+           
         public function execute($_options = array()) {
             
 			if ($this->getType() == '') {
@@ -761,7 +761,7 @@
 			$eqLogic = $this->getEqlogic();
 			$eqLogic->MAJColis($eqLogic->getId());
 			
-        }*/
+        }
     }
     
     ?>
