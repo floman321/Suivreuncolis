@@ -24,7 +24,7 @@
         
 		
         
-
+ 
         
         function multiexplode ($delimiters,$string) {
             
@@ -677,11 +677,7 @@
             if ($comment == ''){
                 $comment = "";
             }else{
-<<<<<<< HEAD
                 $comment = '<p><i class="fa fa-pencil cursor"></i>'.$comment.'</p>';
-=======
-                $comment = '<p><i class="fa fa-pencil cursor"></i> '.$comment.'</p>';
->>>>>>> origin/master
             }
             
             $replace['#commentaire#'] = $comment;
