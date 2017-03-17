@@ -1,4 +1,4 @@
-<?php
+    <?php
     
     /* This file is part of Jeedom.
      *
@@ -23,8 +23,7 @@
         /*     * *************************Attributs****************************** */
         
 		
-        
-        public static function CodeToHTML($code) {
+         public static function CodeToHTML($code) {
             
             switch ($code) {
                 case 0:
@@ -55,7 +54,7 @@
             }
             
         }
-
+ 
         
         function multiexplode ($delimiters,$string) {
             
@@ -95,7 +94,7 @@
             
             if( ! $server_output = curl_exec($ch)) {
                 
-                log::add('Suivreuncolis', 'debug', 'httperror' . "https://api.aftership.com/v4/trackings/$Transporteur/$NumEnvoi");
+                log::add('Suivreuncolis', 'debug', 'httperror aftership' . "https://api.aftership.com/v4/trackings/$Transporteur/$NumEnvoi");
                 
                 return array("","","","");
             }else{
@@ -206,6 +205,56 @@
             return array($etat_,'',$date,10,$description);
             
         }
+		
+		public static function APIServices($numsuivi,$NumOperator) {
+            
+			
+            $ch = curl_init();
+            
+            curl_setopt($ch, CURLOPT_URL,"https://www.17track.net/restapi/handlertrack.ashx");
+            curl_setopt($ch, CURLOPT_POST, 1);
+            
+            if ($NumOperator == ''){
+                curl_setopt($ch, CURLOPT_POSTFIELDS,'{"data":[{"num":"'.$numsuivi.'"}]}');
+            }else{
+                curl_setopt($ch, CURLOPT_POSTFIELDS,'{"data":[{"num":"'.$numsuivi.'","fc":"'.$NumOperator.'"}]}');
+            }
+                        
+            // receive server response ...
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            
+            if( ! $server_output = curl_exec($ch)) {
+                
+                log::add('Suivreuncolis', 'debug', 'httperror');
+                
+                return array("","","","");
+            }
+            
+            log::add('Suivreuncolis', 'debug', 'httpok Numero colis '.$numsuivi.' '.$server_output);
+                        
+            curl_close ($ch);
+            
+            $data = json_decode($server_output, true);
+          
+            
+            if ($data['dat'][0]['delay'] == 0  || $data['ret'] != '1'){
+                
+                log::add('Suivreuncolis', 'debug', ' Ok Numero colis '.$numsuivi.' code '.$data['ret']);
+                
+                $codetraduit = Suivreuncolis::CodeToHTML($data['dat'][0]['track']['e']);
+              
+				//var_dump($data['dat'][0]['track']['z0']);
+                
+                return array($codetraduit , $data['dat'][0]['track']['z0']['d'] . ', '.$data['dat'][0]['track']['z0']['c'] , $data['dat'][0]['track']['z0'][a] , $data['dat'][0]['track']['e'] , $data['dat'][0]['track']['z0']['z'] );
+                
+            }else{
+                
+                log::add('Suivreuncolis', 'debug', 'httpok saturation not ok code erreur '.$data['ret'].'- delay '.$data['dat'][0]['delay']);
+                return array("","","","","");
+                
+            }
+            
+        }
         
         function SkyRecupere($NumEnvoi) {
             
@@ -271,7 +320,13 @@
                           case "aftership":
                               list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::AfterShipRecupere($numcolis,$transporteurAftership,$cp);
                               break;
+						  case "17tracks":
+							log::add('Suivreuncolis', 'debug', 'httpok 17tracks');
+							  list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::APIServices($numcolis,'');
+							break;
+							
                           default:
+							
                       }
                       
                     }
@@ -285,7 +340,7 @@
                             if ($cmd->execCmd() != $etat){
 								
 							   if ($notif == "jeedom_msg"){
-                                   message::add('Suivreuncolis','Message -> Nouvelle etat du colis N°'.$numcolis.' '.$lecommentaire.' '.$msgtransporteur.' | '.$cmd->execCmd().' '.$etat );
+                                   message::add('Suivreuncolis','Message -> Nouvelle etat du colis N°'.$numcolis.' '.$lecommentaire.' '.$msgtransporteur.' | '.$cmd->getValue().' => '.$etat );
 							   }
                               
                                if ($notif == "cmd"){
@@ -655,25 +710,26 @@
         
         public function toHtml($_version = 'dashboard') {
             
-         
             if ($this->getIsEnable() != 1) {
                 return '';
             }
             if (!$this->hasRight('r')) {
                 return '';
             }
+          
+            
+            $replace = $this->preToHtml($_version);
+            if (!is_array($replace)) {
+                return $replace;
+            }
+          
+          
             
             $version = jeedom::versionAlias($_version);
             if ($this->getDisplay('hideOn' . $version) == 1) {
                 return '';
             }
-            
-            
-            $mc = cache::byKey('ColisWidget' . $_version . $this->getId() );
-            if ($mc->getValue() != '' && $mc->getOptions('#dateheure#','-') != '-') {              
-				return preg_replace("/" . preg_quote(self::UIDDELIMITER) . "(.*?)" . preg_quote(self::UIDDELIMITER) . "/", self::UIDDELIMITER . mt_rand() . self::UIDDELIMITER, $mc->getValue());
-            }
-             
+                         
             $html_forecast = '';
             
             $replace = array(
@@ -707,7 +763,7 @@
             if ($comment == ''){
                 $comment = "";
             }else{
-                $comment = '<p><i class="fa fa-pencil cursor"></i>$comment</p>';
+                $comment = '<p><i class="fa fa-pencil cursor"></i>'.$comment.'</p>';
             }
             
             $replace['#commentaire#'] = $comment;
@@ -767,16 +823,15 @@
 			}
 			
 			
-            $parameters = $this->getDisplay('parameters');
+            /*$parameters = $this->getDisplay('parameters');
             if (is_array($parameters)) {
                 foreach ($parameters as $key => $value) {
                     $replace['#' . $key . '#'] = $value;
                 }
-            }
-            
-            $html = template_replace($replace, getTemplate('core', $_version, 'colis', 'Suivreuncolis'));
-            cache::set('ColisWidget' . $_version . $this->getId(), $html, 0);
-            return $html;
+            }*/
+                      
+          
+            return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, 'colis', 'Suivreuncolis')));
          
         }
         
