@@ -249,8 +249,8 @@
                 
             }else{
                 
-                log::add('Suivreuncolis', 'debug', 'httpok saturation not ok code erreur '.$data['ret'].'- delay '.$data['dat'][0]['delay']);
-                return array("","","","","");
+                log::add('Suivreuncolis', 'debug', 'httpnok saturation not ok code erreur '.$data['ret'].'- delay '.$data['dat'][0]['delay']);
+                return array("-99","","","","");
                 
             }
             
@@ -330,6 +330,8 @@
                       }
                       
                     }
+					
+					if ($etat == '-99') return;
 					
               		$notif = config::byKey('notificationpar', 'suivreuncolis','');
               
