@@ -447,35 +447,39 @@
                       if (eqLogic::byTypeAndSearhConfiguration('Suivreuncolis','"numsuivi":"'.$moncolis['tracking_number'].'"') == null){
                                      
                         log::add('Suivreuncolis', 'debug', ' => Importation 1 colis depuis AfterShip'.$moncolis['tracking_number']);
-                        
-                        $mynewcolis = null;
-                        $mynewcolis = new self();
-                        $mynewcolis->setConfiguration('numsuivi',$moncolis['tracking_number']);
-                        $mynewcolis->setConfiguration('transporteur','aftership');
-                        $mynewcolis->setConfiguration('transaftership',$moncolis['slug']);
-                        $mynewcolis->setConfiguration('cp_aftership',$moncolis['tracking_postal_code']);
-                        $mynewcolis->setConfiguration('autocreate',0);
-                        
-                        if ($moncolis['title'] != ''){
-                        	$mynewcolis->setName($moncolis['title']);
-                        }else{
-                          	$mynewcolis->setName($moncolis['tracking_number']);
-                        }
-                        
-                        $mynewcolis->setIsEnable(1);
-                        $mynewcolis->setIsVisible(1);
-                        $mynewcolis->setEqType_name('Suivreuncolis');
-                        
-                        $objetpardefaut = config::byKey('objetpardefaut', 'suivreuncolis','');
-                        if ( $objetpardefaut == ''){
-                        }else{
-                          $mynewcolis->setObject_id($objetpardefaut);
-                        }
-                        
-                        $mynewcolis->save();
-                        
-                        $mynewcolis->toHtml('dashboard');
-                    	$mynewcolis->refreshWidget();
+                        if ($moncolis['shipment_delivery_date'] != null) {
+	                        log::add('Suivreuncolis', 'debug', '   - Colis non livré import');
+				$mynewcolis = null;
+				$mynewcolis = new self();
+				$mynewcolis->setConfiguration('numsuivi',$moncolis['tracking_number']);
+				$mynewcolis->setConfiguration('transporteur','aftership');
+				$mynewcolis->setConfiguration('transaftership',$moncolis['slug']);
+				$mynewcolis->setConfiguration('cp_aftership',$moncolis['tracking_postal_code']);
+				$mynewcolis->setConfiguration('autocreate',0);
+
+				if ($moncolis['title'] != ''){
+					$mynewcolis->setName($moncolis['title']);
+				}else{
+					$mynewcolis->setName($moncolis['tracking_number']);
+				}
+
+				$mynewcolis->setIsEnable(1);
+				$mynewcolis->setIsVisible(1);
+				$mynewcolis->setEqType_name('Suivreuncolis');
+
+				$objetpardefaut = config::byKey('objetpardefaut', 'suivreuncolis','');
+				if ( $objetpardefaut == ''){
+				}else{
+				  $mynewcolis->setObject_id($objetpardefaut);
+				}
+
+				$mynewcolis->save();
+
+				$mynewcolis->toHtml('dashboard');
+				$mynewcolis->refreshWidget();
+			} else {
+				log::add('Suivreuncolis', 'debug', '   - Colis livré pas d import');
+			}
                       }
                       
                     }
