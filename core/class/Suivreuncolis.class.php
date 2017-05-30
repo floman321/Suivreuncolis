@@ -85,7 +85,7 @@
  	             $postalcode = "?lang=en";
             }
 			
-			log::add('Suivreuncolis', 'debug', 'httpdebug' . "https://api.aftership.com/v4/trackings/$Transporteur/$NumEnvoi$postalcode");
+			log::add('Suivreuncolis', 'debug', '  httpdebug ' . "https://api.aftership.com/v4/trackings/$Transporteur/$NumEnvoi$postalcode");
 			
             curl_setopt($ch, CURLOPT_URL,"https://api.aftership.com/v4/trackings/$Transporteur/$NumEnvoi$postalcode");
             curl_setopt($curl_handle, CURLOPT_CUSTOMREQUEST, 'GET');
@@ -109,7 +109,7 @@
                   
                     $monitem = $data['data']['tracking']['checkpoints'][$nbtotal];
                                     
-   	                log::add('Suivreuncolis', 'debug', ' debug nb occurence '.$nbtotal.' '.$monitem['checkpoint_time']);
+   	                log::add('Suivreuncolis', 'debug', '    debug nb occurence '.$nbtotal.' '.$monitem['checkpoint_time']);
 
                     $dh = str_replace('T',' ',str_replace('T00:00:00','',$monitem['checkpoint_time']));
                     $msg = $monitem['message'];
@@ -293,22 +293,26 @@
         
         public static function MAJColis($idcolis) {
             
-            foreach (self::byType('Suivreuncolis') as $weather) {
+            foreach (self::byType('Suivreuncolis') as $suivreUnColis) {
                 
-                if ($weather->getIsEnable() == 1) {
+                if ($suivreUnColis->getIsEnable() == 1) {
                     
-                    $nom = $weather->getName();
-                    $transnom = $weather->getConfiguration('transporteur','');
-                    $numcolis = $weather->getConfiguration('numsuivi',0);
-                    $lecommentaire = $weather->getConfiguration('commentaire','');
-                    $transporteurAftership = $weather->getConfiguration('transaftership','');
-					$cp = $weather->getConfiguration('cp_aftership','');
+                    $nom = $suivreUnColis->getName();
+                    $transnom = $suivreUnColis->getConfiguration('transporteur','');
+                    $numcolis = $suivreUnColis->getConfiguration('numsuivi',0);
+                    $lecommentaire = $suivreUnColis->getConfiguration('commentaire','');
+                    $transporteurAftership = $suivreUnColis->getConfiguration('transaftership','');
+					$cp = $suivreUnColis->getConfiguration('cp_aftership','');
+					$ac = $suivreUnColis->getConfiguration('autocreate',0);
+					$ad = $suivreUnColis->getConfiguration('autodekete',0);
+
                     $etat = '';
                   
                     if ($numcolis == '') continue;
                     
                     
                     log::add('Suivreuncolis', 'debug', 'refreshdata MAJColis essai '.$transnom.' Nom Colis : '.$nom);
+                    log::add('Suivreuncolis', 'debug', '  AutoCreate = '.$ac.' AutoDelete : '.$ad);
                     
                       switch ($transnom) {
                           case "sky56":
@@ -335,7 +339,7 @@
 					
               		$notif = config::byKey('notificationpar', 'suivreuncolis','');
               
-                    foreach ($weather->getCmd() as $cmd) {
+                    foreach ($suivreUnColis->getCmd() as $cmd) {
                         $v = $cmd->getName();
                         
                         if ($v == 'etat'){
@@ -403,8 +407,18 @@
                         
                     }
                     
-                    $weather->toHtml('dashboard');
-                    $weather->refreshWidget();
+                    $suivreUnColis->toHtml('dashboard');
+                    $suivreUnColis->refreshWidget();
+					
+					//Si le colis est livré depuis 15 jours, alors on le supprime de la liste
+					$interval =  floor( (((time() - strtotime($dateheure))/60)/60)/24);
+					log::add('Suivreuncolis', 'debug', '    codeetat : '.$codeetat.' dateheure : '.$dateheure.'  -> +'.$interval.'J');
+					if ($codeetat == '40' && $interval >= 15) {
+						$suivreUnColis->remove();
+						log::add('Suivreuncolis', 'debug', '      Colis livré et vieux de plus de 15 jours -> suppression');
+					} else {						
+						log::add('Suivreuncolis', 'debug', '      Colis non livré ou livré depuis moins de 15 jours -> pas de suppression');
+					}
                 }
              
         }
@@ -445,37 +459,45 @@
                     foreach ($mescolis as $moncolis){
                       
                       if (eqLogic::byTypeAndSearhConfiguration('Suivreuncolis','"numsuivi":"'.$moncolis['tracking_number'].'"') == null){
-                                     
-                        log::add('Suivreuncolis', 'debug', ' => Importation 1 colis depuis AfterShip'.$moncolis['tracking_number']);
-                        
-                        $mynewcolis = null;
-                        $mynewcolis = new self();
-                        $mynewcolis->setConfiguration('numsuivi',$moncolis['tracking_number']);
-                        $mynewcolis->setConfiguration('transporteur','aftership');
-                        $mynewcolis->setConfiguration('transaftership',$moncolis['slug']);
-                        $mynewcolis->setConfiguration('cp_aftership',$moncolis['tracking_postal_code']);
-                        $mynewcolis->setConfiguration('autocreate',0);
-                        
+						$nom = "SansNom";
                         if ($moncolis['title'] != ''){
-                        	$mynewcolis->setName($moncolis['title']);
-                        }else{
-                          	$mynewcolis->setName($moncolis['tracking_number']);
-                        }
-                        
-                        $mynewcolis->setIsEnable(1);
-                        $mynewcolis->setIsVisible(1);
-                        $mynewcolis->setEqType_name('Suivreuncolis');
-                        
-                        $objetpardefaut = config::byKey('objetpardefaut', 'suivreuncolis','');
-                        if ( $objetpardefaut == ''){
-                        }else{
-                          $mynewcolis->setObject_id($objetpardefaut);
-                        }
-                        
-                        $mynewcolis->save();
-                        
-                        $mynewcolis->toHtml('dashboard');
-                    	$mynewcolis->refreshWidget();
+							$nom=$moncolis['title'];
+						}
+                        log::add('Suivreuncolis', 'debug', ' => Importation 1 colis depuis AfterShip : '.$moncolis['tracking_number'].'-'.$nom);
+                        if ($moncolis['shipment_delivery_date'] == null) {
+	                        log::add('Suivreuncolis', 'debug', '   - Colis non livré import');
+							$mynewcolis = null;
+							$mynewcolis = new self();
+							$mynewcolis->setConfiguration('numsuivi',$moncolis['tracking_number']);
+							$mynewcolis->setConfiguration('transporteur','aftership');
+							$mynewcolis->setConfiguration('transaftership',$moncolis['slug']);
+							$mynewcolis->setConfiguration('cp_aftership',$moncolis['tracking_postal_code']);
+							$mynewcolis->setConfiguration('autocreate',0);
+							$mynewcolis->setConfiguration('autodelete',0);
+
+							if ($moncolis['title'] != ''){
+								$mynewcolis->setName($moncolis['title']);
+							}else{
+								$mynewcolis->setName($moncolis['tracking_number']);
+							}
+
+							$mynewcolis->setIsEnable(1);
+							$mynewcolis->setIsVisible(1);
+							$mynewcolis->setEqType_name('Suivreuncolis');
+
+							$objetpardefaut = config::byKey('objetpardefaut', 'suivreuncolis','');
+							if ( $objetpardefaut == ''){
+							}else{
+							  $mynewcolis->setObject_id($objetpardefaut);
+							}
+
+							$mynewcolis->save();
+
+							$mynewcolis->toHtml('dashboard');
+							$mynewcolis->refreshWidget();
+						} else {
+							log::add('Suivreuncolis', 'debug', '   - Colis livré pas d import : '.$moncolis['shipment_delivery_date']);
+						}
                       }
                       
                     }
@@ -617,11 +639,12 @@
         
         public function postSave() {
 			
-			
+		
 			$transnom = $this->getConfiguration('transporteur','');
             $autcreation = $this->getConfiguration('autocreate','1');
             
 			if ($transnom == "aftership" && $autcreation != '0'){
+				log::add('Suivreuncolis', 'debug', 'AutoCreation dans aftership' );
 				
 				$apikey = config::byKey('api_aftership', 'suivreuncolis','');
 				
@@ -672,8 +695,11 @@
 			
 			
 			$transnom = $this->getConfiguration('transporteur','');
-			
-			if ($transnom == "aftership"){
+			$autdelete = $this->getConfiguration('autodelete','0');
+
+			if ($transnom == "aftership" && $autdelete == 1){
+				
+				log::add('Suivreuncolis', 'debug', 'Aftership et auto delete activé -> supression' );
 				
 				$apikey = config::byKey('api_aftership', 'suivreuncolis','');
 				

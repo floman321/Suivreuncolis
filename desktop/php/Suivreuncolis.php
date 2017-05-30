@@ -178,8 +178,7 @@ function rechercher()
 <h3>AfterShip</h3>
 
 <p>Vous devez avoir une cle API pour utiliser ce service (voir <a href='https://secure.aftership.com/apps/api'>https://secure.aftership.com/apps/api</a>)
-                                                          </br>Le colis sera créé/supprimer automatiquement dans AfterShip</p>
-                                                          
+                                                                                                                  
                                                           <div class="form-group">
                                                           <label class="col-sm-3 control-label">Transporteur AfterShip</label>
                                                           <div class="col-sm-3">
@@ -561,10 +560,27 @@ function rechercher()
                                                           <input type="text" class="eqLogicAttr configuration form-control" data-l1key="configuration" data-l2key="cp_aftership" placeholder="Code Postal destination "/>
                                                           </div>
                                                           </div>
+
+														  <div class="form-group">
+														  <label class="col-sm-3 control-label">Auto creation dans aftership</label>
+														  <div class="col-sm-3">
+														  <input type="checkbox" class="eqLogicAttr bootstrapSwitch" data-l1key="configuration" data-l2key="autocreate" unchecked/>
+														  </div>
+														  </div>
+
+														  <div class="form-group">
+														  <label class="col-sm-3 control-label">Auto suppression dans aftership</label>
+														  <div class="col-sm-3">
+														  <input type="checkbox" class="eqLogicAttr bootstrapSwitch" data-l1key="configuration" data-l2key="autodelete" unchecked/>
+														  </div>
+														  </div>
+														  
                                                           </div>
                                                           </fieldset>
                                                           </form>
                                                           </div>
+
+														  
                                                           <div role="tabpanel" class="tab-pane" id="commandtab">
                                                           <br/><br/>
                                                           <a class="btn btn-success btn-sm cmdAction pull-left" data-action="add" style="margin-top:5px;"><i class="fa fa-plus-circle"></i> {{Ajouter une commande}}</a>
