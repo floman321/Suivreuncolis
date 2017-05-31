@@ -1,0 +1,11 @@
+{
+    "id": "Suivreuncolis",
+    "name": "Suivre un colis",
+    "description": "Plugin pour suivre un colis",
+    "icon": "fa divers-mailbox15",
+    "licence": "AGPL",
+    "author": "Florian Gouyon",
+    "installation": "Aucune",
+    "require": "1.136",
+    "category": "organization"
+}
