@@ -291,7 +291,7 @@
         
         
         
-        public static function MAJColis($idcolis) {
+        public static function MAJColis() {
             
             foreach (self::byType('Suivreuncolis') as $suivreUnColis) {
                 
