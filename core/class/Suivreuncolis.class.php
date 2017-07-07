@@ -873,7 +873,7 @@
 			return '';
 			}
 			$eqLogic = $this->getEqlogic();
-			$eqLogic->MAJColis($eqLogic->getId());
+			$eqLogic->MAJColis();
 			
         }
     }
