@@ -561,19 +561,19 @@ function rechercher()
                                                           </div>
                                                           </div>
 
-														  <div class="form-group">
-														  <label class="col-sm-3 control-label">Auto creation dans aftership</label>
-														  <div class="col-sm-3">
-														  <input type="checkbox" class="eqLogicAttr bootstrapSwitch" data-l1key="configuration" data-l2key="autocreate" unchecked/>
-														  </div>
-														  </div>
+							  <div class="form-group">
+							  <label class="col-sm-3 control-label">Auto creation dans aftership</label>
+							  <div class="col-sm-3">
+							  <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="autocreate" unchecked/></label>
+							  </div>
+							  </div>
 
-														  <div class="form-group">
-														  <label class="col-sm-3 control-label">Auto suppression dans aftership</label>
-														  <div class="col-sm-3">
-														  <input type="checkbox" class="eqLogicAttr bootstrapSwitch" data-l1key="configuration" data-l2key="autodelete" unchecked/>
-														  </div>
-														  </div>
+							  <div class="form-group">
+							  <label class="col-sm-3 control-label">Auto suppression dans aftership</label>
+							  <div class="col-sm-3">
+							  <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="autodelete" unchecked/></label>
+							  </div>
+							  </div>
 														  
                                                           </div>
                                                           </fieldset>
