@@ -796,6 +796,7 @@
             
             $replace['#commentaire#'] = $comment;
 			
+          
 			$msgtransporteur = SuivreuncolisCmd::byEqLogicIdCmdName($this->getId(),'msgtransporteur');
 			$replace['#msgtransporteur#']  = is_object($msgtransporteur) ? $msgtransporteur->execCmd() : '';
 			
@@ -826,7 +827,7 @@
                     $replace['#image#'] = "https://www.aftership.com/img/svg/status-attemptfail.svg";//"/plugins/Suivreuncolis/3rparty/problem.png";
                     break;
                 case '40':
-                    $replace['#image#'] = "https://www.aftership.com/img/svg/status-delivered.svg";//"/plugins/Suivreuncolis/3rparty/livre.png";
+                    $replace['#image#'] = "https://secure.aftership.com/img/svg/status-delivered.svg";//"/plugins/Suivreuncolis/3rparty/livre.png";
                     break;
                 case '50':
                		$replace['#image#'] = "https://www.aftership.com/img/svg/status-expired.svg";//"/plugins/Suivreuncolis/3rparty/problem.png";
@@ -842,7 +843,8 @@
 				$postalcode = "?tracking_postal_code=".$postalcode;
 			}
 			
-            $replace['#lien#'] = 'https://track.aftership.com/'.$numsuivi.$postalcode;
+            $msgtransporteur = $this->getConfiguration('transaftership','');
+            $replace['#lien#'] = 'https://track.aftership.com/'.$msgtransporteur.'/'.$numsuivi.$postalcode;
             $replace['#name_display#'] = $this->getName();
 			
 			$refresh = SuivreuncolisCmd::byEqLogicIdCmdName($this->getId(),'Rafraichir');
