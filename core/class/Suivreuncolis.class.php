@@ -812,7 +812,7 @@
                     $replace['#image#'] = "https://www.aftership.com/img/svg/status-expired.svg";//"/plugins/Suivreuncolis/3rparty/introuvable.png";
                     break;
                 case '5':
-               		$replace['#image#'] = "https://www.aftership.com/img/svg/status-info-receive.svg";//"/plugins/Suivreuncolis/3rparty/preparing.png";
+               		$replace['#image#'] = "https://docs.aftership.com/img/svg/status-info-receive.svg";//"/plugins/Suivreuncolis/3rparty/preparing.png";
                     break;
                 case '10':
                     $replace['#image#'] = "https://www.aftership.com/img/svg/status-in-transit.svg";//"/plugins/Suivreuncolis/3rparty/transit.png";
