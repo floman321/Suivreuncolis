@@ -806,31 +806,31 @@
 									
             switch ($code) {
                 case '':
-                   $replace['#image#'] = "https://www.aftership.com/img/svg/status-expired.svg";//plugins/Suivreuncolis/3rparty/introuvable.png";
+                   $replace['#image#'] = "plugins/Suivreuncolis/core/template/dashboard/status-expired.svg";//plugins/Suivreuncolis/3rparty/introuvable.png";
                    break;
                 case '0':
-                    $replace['#image#'] = "https://www.aftership.com/img/svg/status-expired.svg";//"/plugins/Suivreuncolis/3rparty/introuvable.png";
+                    $replace['#image#'] = "plugins/Suivreuncolis/core/template/dashboard/status-expired.svg";//"/plugins/Suivreuncolis/3rparty/introuvable.png";
                     break;
                 case '5':
-               		$replace['#image#'] = "https://docs.aftership.com/img/svg/status-info-receive.svg";//"/plugins/Suivreuncolis/3rparty/preparing.png";
+               		$replace['#image#'] = "plugins/Suivreuncolis/core/template/dashboard/status-info-receive.svg";//"/plugins/Suivreuncolis/3rparty/preparing.png";
                     break;
                 case '10':
-                    $replace['#image#'] = "https://www.aftership.com/img/svg/status-in-transit.svg";//"/plugins/Suivreuncolis/3rparty/transit.png";
+                    $replace['#image#'] = "plugins/Suivreuncolis/core/template/dashboard/status-in-transit.svg";//"/plugins/Suivreuncolis/3rparty/transit.png";
                     break;
                 case '20':
-                    $replace['#image#'] = "https://www.aftership.com/img/svg/status-expired.svg";//"/plugins/Suivreuncolis/3rparty/introuvable.png";
+                    $replace['#image#'] = "plugins/Suivreuncolis/core/template/dashboard/status-expired.svg";//"/plugins/Suivreuncolis/3rparty/introuvable.png";
                     break;
                 case '30':
-                    $replace['#image#'] = "https://www.aftership.com/img/svg/status-out-for-delivery.svg";//"/plugins/Suivreuncolis/3rparty/outfordelivery.png";
+                    $replace['#image#'] = "plugins/Suivreuncolis/core/template/dashboard/status-out-for-delivery.svg";//"/plugins/Suivreuncolis/3rparty/outfordelivery.png";
                     break;
                 case '35':
-                    $replace['#image#'] = "https://www.aftership.com/img/svg/status-attemptfail.svg";//"/plugins/Suivreuncolis/3rparty/problem.png";
+                    $replace['#image#'] = "plugins/Suivreuncolis/core/template/dashboard/status-attemptfail.svg";//"/plugins/Suivreuncolis/3rparty/problem.png";
                     break;
                 case '40':
-                    $replace['#image#'] = "https://secure.aftership.com/img/svg/status-delivered.svg";//"/plugins/Suivreuncolis/3rparty/livre.png";
+                    $replace['#image#'] = "plugins/Suivreuncolis/core/template/dashboard/status-delivered.svg";//"/plugins/Suivreuncolis/3rparty/livre.png";
                     break;
                 case '50':
-               		$replace['#image#'] = "https://www.aftership.com/img/svg/status-expired.svg";//"/plugins/Suivreuncolis/3rparty/problem.png";
+               		$replace['#image#'] = "plugins/Suivreuncolis/core/template/dashboard/status-expired.svg";//"/plugins/Suivreuncolis/3rparty/problem.png";
                     break;
            }
             
