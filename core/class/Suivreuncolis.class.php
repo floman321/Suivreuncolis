@@ -641,7 +641,7 @@
 			
 		
 			$transnom = $this->getConfiguration('transporteur','');
-            $autcreation = $this->getConfiguration('autocreate','1');
+            		$autcreation = $this->getConfiguration('autocreate','1');
             
 			if ($transnom == "aftership" && $autcreation != '0'){
 				log::add('Suivreuncolis', 'debug', 'AutoCreation dans aftership' );
@@ -653,7 +653,7 @@
 					return;
 				}
 				
-				$nom = $this->getConfiguration('name','?');
+				$nom = $this->getName();
 				$numcolis = $this->getConfiguration('numsuivi',0);
 				$lecommentaire = $this->getConfiguration('commentaire','');
 				$transporteurAftership = $this->getConfiguration('transaftership','');
@@ -709,7 +709,7 @@
 				}
 				
 				
-				$nom = $this->getConfiguration('name','?');
+				$nom = $this->getName();
 				$numcolis = $this->getConfiguration('numsuivi',0);
 				$lecommentaire = $this->getConfiguration('commentaire','');
 				$transporteurAftership = $this->getConfiguration('transaftership','');
