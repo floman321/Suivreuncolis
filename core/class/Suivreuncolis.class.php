@@ -763,7 +763,6 @@
             $replace = array(
                              '#id#' => $this->getId(),
                              '#collectDate#' => '',
-                             '#background_color#' => $this->getBackgroundColor($_version),
                              '#eqLink#' => $this->getLinkToConfiguration(),
                              );
           
