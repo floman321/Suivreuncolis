@@ -2,7 +2,7 @@
 == Suivre un colis
 
 === Description
-Ce plugin permet d'obtenir le suivi de colis grâce au site www.17track.net
+Ce plugin permet d'obtenir le suivi vos colis
 
 La récupération des informations de suivi ce fait toutes les heures
 
