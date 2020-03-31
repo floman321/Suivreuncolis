@@ -7,7 +7,7 @@
     "author": "Florian Gouyon",
     "installation": "Aucune",
     "require" : "3.3.28",
-    "category": "organization"
+    "category": "organization",
     "hasDependency" : false,
     "hasOwnDeamon" : false,
     "maxDependancyInstallTime" : 0,
