@@ -6,6 +6,13 @@
     "licence": "AGPL",
     "author": "Florian Gouyon",
     "installation": "Aucune",
-    "require": "1.136",
+    "require" : "3.3.28",
     "category": "organization"
+    "hasDependency" : false,
+    "hasOwnDeamon" : false,
+    "maxDependancyInstallTime" : 0,
+    "changelog" : "https://floman321.github.io/Suivreuncolis/#language#/changelog",
+    "documentation" : "https://floman321.github.io/Suivreuncolis/#language#/",
+    "language" : ["fr_FR","en_US","de_DE","sp_SP","ru_RU","id_ID","it_IT"],
+    "compatibility" : ["miniplus","smart","rpi","docker","diy", "V4"]
 }
