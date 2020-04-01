@@ -41,7 +41,7 @@ if (!isConnect()) {
   	<option value="">Aucun</option>
   
   <?php
-    $allObject = object::all(true);
+    $allObject = jeeObject::all(true);
 
     foreach ($allObject as $object_li) {
        echo '<option value="'.$object_li->getId().'">'. $object_li->getHumanName(true) . '</option>';
