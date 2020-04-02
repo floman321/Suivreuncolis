@@ -46,13 +46,10 @@ Ce plugin permet d'obtenir le suivi vos colis
 
 La récupération des informations de suivi ce fait toutes les heures
 
-'''
 === Configuration
-include::partie_1.asciidoc[]
 
 
 
-'''
 === Codes Etat Colis
 Utile si vous voulez déclencher une action sur un code précis (Ouvrir un portier)
 
@@ -94,9 +91,4 @@ Non
 
 -   Est-ce que le plugin gère Mondial Relay ?
 Non
-
-=======
-'''
-include::faq.asciidoc[]
-=== FAQ
 
