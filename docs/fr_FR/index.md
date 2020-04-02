@@ -1,7 +1,7 @@
 Description 
 ===
 
-Ce plugin permet d'obtenir le suivi de colis grâce au site www.17track.net
+Ce plugin permet d'obtenir le suivi de colis grâce au site aftership
 
 La récupération des informations de suivi se fait toutes les heures.
  
@@ -87,7 +87,7 @@ FAQ
 -> Jusqu'à 1 heure
 
 -   Est-ce que le plugin s’appuie sur des API tierces ?
-Oui , le site www.17track.net
+Oui , le site www.aftership.com
 
 -   Est-ce que le plugin s’appuie sur des plugins tiers ?
 Non
@@ -97,6 +97,6 @@ Non
 
 =======
 '''
-=== FAQ
 include::faq.asciidoc[]
+=== FAQ
 
