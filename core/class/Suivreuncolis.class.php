@@ -860,8 +860,9 @@
             }*/
                       
           
-            return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, 'colis', 'Suivreuncolis')));
-         
+            $html = template_replace($replace, getTemplate('core', $version, 'colis', 'Suivreuncolis'));
+			cache::set('widgetHtml' . $version . $this->getId(), $html, 0);
+			return $html;
         }
         
     }
