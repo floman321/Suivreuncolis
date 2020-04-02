@@ -861,7 +861,7 @@
                       
           
             $html = template_replace($replace, getTemplate('core', $version, 'colis', 'Suivreuncolis'));
-			cache::set('widgetHtml' . $version . $this->getId(), $html, 0);
+			cache::set('widgetHtmlColis' . $version . $this->getId(), $html, 0);
 			return $html;
         }
         
