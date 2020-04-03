@@ -64,6 +64,77 @@
         }
         
         
+      	function LaPosteRecupere ($NumEnvoi) {
+          
+            $ch = curl_init();
+            
+            curl_setopt($ch, CURLOPT_URL,"https://api.laposte.fr/suivi/v2/idships/$NumEnvoi?lang=fr_FR");
+            curl_setopt($curl_handle, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch,CURLOPT_HTTPHEADER,array('Accept: application/json','X-Forwarded-For: 123.123.123.123','X-Okapi-Key: LAQqBa7l8L+q+5mkKRVOcmsFzsD+/PrUUeoV8ekThic3sA5cuD9MWPudVY9vi4tY'));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            
+            if( ! $server_output = curl_exec($ch)) {
+                
+                log::add('Suivreuncolis', 'debug', 'httperror laposte' . "https://api.laposte.fr/suivi/v2/idships/$NumEnvoi?lang=fr_FR");
+                
+                return array("","","","");
+            }else{
+                
+                $data = json_decode($server_output, true);
+              	
+                if ($data['returnCode'] == 200 ){
+                  
+					 log::add('Suivreuncolis', 'debug', '    debug loop ');
+                  
+                      	$monitem = $data['shipment']['event'][0];
+                       	$dh = str_replace('T',' ',str_replace('T00:00:00','',$monitem['date']));
+                      	$msg = $monitem['label'];
+                        $lieu = '';
+                        $statusbrut = $monitem['code'];
+                        switch ($statusbrut) {
+                            case 'Pending':
+                                $codetat = 0;
+                                break;
+                            case 'PC1':
+                                $codetat = 5;
+                                break;
+                            case 'ET1':
+                                $codetat = 10;
+                                break;
+                            case 'Courrier en distribution':
+                                $codetat = 30;
+                                break;
+                            case 'AttemptFail':
+                                $codetat = 35;
+                                break;
+                            case 'DI1':
+                                $codetat = 40;
+                                break;
+                            case 'Exception':
+                                $codetat = 50;
+                                break;
+                            case 'Expired':
+                                $codetat = 20;
+                                break;
+                        }
+                     
+                    return array($msg,$lieu,$dh,$codetat,$msg);
+                    
+                }else{
+                    log::add('Suivreuncolis', 'debug', 'httpok laposte code error'. $data['returnCode'] );
+                  	$msg = $data['returnMessage'];
+                  	$codetat = 50;
+                  	$lieu = '';
+                  	$dh = '';
+                    return array($msg,$lieu,$dh,$codetat,$msg);
+                }
+                
+            }
+            
+            
+            return array('','','');
+        }
+      
         function AfterShipRecupere ($NumEnvoi,$Transporteur,$postalcode = '') {
             
             $apikey = config::byKey('api_aftership', 'suivreuncolis','');
@@ -324,6 +395,9 @@
                           case "aftership":
                               list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::AfterShipRecupere($numcolis,$transporteurAftership,$cp);
                               break;
+                          case "laposte":
+                              list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::LaPosteRecupere($numcolis);
+                              break;
 						  case "17tracks":
 							log::add('Suivreuncolis', 'debug', 'httpok 17tracks');
 							  list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::APIServices($numcolis,'');
@@ -342,8 +416,8 @@
                     foreach ($suivreUnColis->getCmd() as $cmd) {
                         $v = $cmd->getName();
                         
-                        if ($v == 'etat'){
-                            if ($cmd->execCmd() != $etat){
+                        if ($v == 'codeetat'){
+                            if ($cmd->execCmd() != $codeetat){
 								
 							   if ($notif == "jeedom_msg"){
                                    message::add('Suivreuncolis','Message -> Nouvelle etat du colis N°'.$numcolis.' '.$lecommentaire.' '.$msgtransporteur.' | '.$cmd->getValue().' => '.$etat );
@@ -407,7 +481,6 @@
                         
                     }
                     
-                    $suivreUnColis->toHtml('dashboard');
                     $suivreUnColis->refreshWidget();
 					
 					//Si le colis est livré depuis 15 jours, alors on le supprime de la liste
@@ -745,13 +818,10 @@
                 return '';
             }
           
-            
             $replace = $this->preToHtml($_version);
             if (!is_array($replace)) {
                 return $replace;
             }
-          
-          
             
             $version = jeedom::versionAlias($_version);
             if ($this->getDisplay('hideOn' . $version) == 1) {
@@ -769,17 +839,20 @@
             
             $dateheure = SuivreuncolisCmd::byEqLogicIdCmdName($this->getId(),'dateheure');
             $replace['#dateheure#'] = is_object($dateheure) ? $dateheure->execCmd() : '?';
+          	if ($replace['#dateheure#'] != ''){
+                $replace['#dateheure#'] = '<p></i> '.$replace['#dateheure#'].'</p>';
+            }
             
             $etat = SuivreuncolisCmd::byEqLogicIdCmdName($this->getId(),'etat');
             $replace['#etat#'] = is_object($etat) ? $etat->execCmd() : '';
+
             
             $lieu = SuivreuncolisCmd::byEqLogicIdCmdName($this->getId(),'lieu');
             $replace['#lieu#'] = is_object($lieu) ? $lieu->execCmd() : '';
             
             if ($replace['#lieu#'] != ''){
-                $replace['#lieu#'] = '<p><i class="fa fa-location-arrow cursor"></i> '.$replace['#lieu#'].'</p>';
+                $replace['#lieu#'] = '<p></i> '.$replace['#lieu#'].'</p>';
             }
-            
             
             $codeetat = SuivreuncolisCmd::byEqLogicIdCmdName($this->getId(),'codeetat');
             $code = is_object($codeetat) ? $codeetat->execCmd() : '';
@@ -790,7 +863,7 @@
             if ($comment == ''){
                 $comment = "";
             }else{
-                $comment = '<p><i class="fa fa-pencil cursor"></i>'.$comment.'</p>';
+                $comment = '<p></i>'.$comment.'</p>';
             }
             
             $replace['#commentaire#'] = $comment;
@@ -798,7 +871,6 @@
           
 			$msgtransporteur = SuivreuncolisCmd::byEqLogicIdCmdName($this->getId(),'msgtransporteur');
 			$replace['#msgtransporteur#']  = is_object($msgtransporteur) ? $msgtransporteur->execCmd() : '';
-			
 			if ($replace['#etat#'] == $replace['#msgtransporteur#']){
 				$replace['#msgtransporteur#']  = '';
 			}
