@@ -33,6 +33,15 @@ if (!isConnect()) {
 </div>
 </div>
   
+  <form class="form-horizontal">
+<fieldset>
+<div class="form-group">
+<label class="col-lg-4 control-label">Cle API LaPoste : (<a href="https://developer.laposte.fr/products/suivi/latest">Lien vers formuluraire</a>) </label>
+<div class="col-lg-2">
+<input class="configKey form-control" data-l1key="api_laposte" />
+</div>
+</div>
+  
 <div class="form-group">
 <label class="col-lg-4 control-label">A la création d'un colis, l' objet parent est : </label>
 <div class="col-lg-2">
