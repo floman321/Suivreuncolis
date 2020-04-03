@@ -66,11 +66,19 @@
         
       	function LaPosteRecupere ($NumEnvoi) {
           
+            $apikey = config::byKey('api_laposte', 'suivreuncolis','');
+            
+            if ($apikey == ''){
+                log::add('Suivreuncolis', 'error', 'Api key La poste manquante'.$apikey );
+                return array("","","","","");
+            }
+          
+          
             $ch = curl_init();
             
             curl_setopt($ch, CURLOPT_URL,"https://api.laposte.fr/suivi/v2/idships/$NumEnvoi?lang=fr_FR");
             curl_setopt($curl_handle, CURLOPT_CUSTOMREQUEST, 'GET');
-            curl_setopt($ch,CURLOPT_HTTPHEADER,array('Accept: application/json','X-Forwarded-For: 123.123.123.123','X-Okapi-Key: LAQqBa7l8L+q+5mkKRVOcmsFzsD+/PrUUeoV8ekThic3sA5cuD9MWPudVY9vi4tY'));
+            curl_setopt($ch,CURLOPT_HTTPHEADER,array('Accept: application/json','X-Forwarded-For: 123.123.123.123','X-Okapi-Key: '.$apikey));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             
             if( ! $server_output = curl_exec($ch)) {
@@ -170,10 +178,8 @@
                 return array("","","","");
             }else{
                 
-                
                 $data = json_decode($server_output, true);
               
-                
                 if ($data['meta']['code'] == 200 ){
                   
                     $nbtotal = count($data['data']['tracking']['checkpoints']) -1;
@@ -859,13 +865,11 @@
             $replace['#jauge#'] = $code;
           
             $comment = $this->getConfiguration('commentaire','');
-            
             if ($comment == ''){
                 $comment = "";
             }else{
-                $comment = '<p></i>'.$comment.'</p>';
+                $comment = '<p>'.$comment.'</p>';
             }
-            
             $replace['#commentaire#'] = $comment;
 			
           
