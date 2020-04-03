@@ -165,10 +165,10 @@ function rechercher()
 
 <select id="sel_object" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="transporteur" onchange="transporteurchange(this);">
 	<option value='aftership'>AfterShip</option>
+	<option value='laposte'>La Poste</option>
 	<option value='sky56'>Sky56</option>
 	<option value='aliexpress'>AliExpress Shipping</option>
 	<option value='17tracks'>17 Tracks</option>
-    <option value='laposte'>La Poste</option>
 </select>
 
 </div>
