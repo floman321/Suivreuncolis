@@ -168,6 +168,7 @@ function rechercher()
 	<option value='sky56'>Sky56</option>
 	<option value='aliexpress'>AliExpress Shipping</option>
 	<option value='17tracks'>17 Tracks</option>
+    <option value='laposte'>La Poste</option>
 </select>
 
 </div>
