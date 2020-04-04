@@ -432,7 +432,11 @@
                                if ($notif == "cmd"){
                                    $cmd_notif = config::byKey('cmd_notif', 'suivreuncolis','');
                                    $option = array('title' => 'Alerte Nouvelle etat colis N°'.$numcolis, 'message' => 'Nouvelle etat du colis N°'.$numcolis.' '.$lecommentaire.' '.$msgtransporteur.' - '.$etat);
+                                   if(is_string($cmd_notif)){
+                                  cmd::byString($cmd_notif)->execCmd($option); 
+                                 }else{
                                    cmd::byId($cmd_notif)->execCmd($option);
+                                 }
 							   }
                                							   							   
                                $cmd->setCollectDate('');
