@@ -6,7 +6,7 @@
     "licence": "AGPL",
     "author": "Florian Gouyon",
     "installation": "Aucune",
-    "require" : "3.0",
+    "require" : "3.3.28",
     "category": "organization",
     "hasDependency" : false,
     "hasOwnDeamon" : false,
