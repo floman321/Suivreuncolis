@@ -29,7 +29,12 @@ $eqLogics = eqLogic::byType($plugin->getId());
 foreach ($eqLogics as $eqLogic) {
 	$opacity = ($eqLogic->getIsEnable()) ? '' : 'disableCard';
 	echo '<div class="eqLogicDisplayCard cursor '.$opacity.'" data-eqLogic_id="' . $eqLogic->getId() . '">';
-	echo '<img src="' . $plugin->getPathImgIcon() . '"/>';
+	$transnom = $eqLogic->getConfiguration('transporteur','');
+  	$icon =  'plugins/Suivreuncolis/plugin_info/'.$transnom.'.png';
+  	if(!file_exists($icon)){
+      $icon = $plugin->getPathImgIcon();
+    }  
+	echo '<img src="' . $icon . '"/>';
 	echo '<br>';
 	echo '<span class="name">' . $eqLogic->getHumanName(true, true) . '</span>';
 	echo '</div>';
