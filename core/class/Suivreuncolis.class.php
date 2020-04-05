@@ -512,12 +512,12 @@
           $apikey = config::byKey('api_aftership', 'suivreuncolis','');
 				
 				if ($apikey == ''){
-					log::add('Suivreuncolis', 'error', 'Api key Aftership manquante'.$apikey );
+					log::add('Suivreuncolis', 'debug', 'Api key Aftership manquante'.$apikey );
 					return '';
 				}
           
             
-           //log::add('Suivreuncolis', 'debug', ' importAfterShip ');
+           log::add('Suivreuncolis', 'debug', ' importAfterShip ');
           
             $ch = curl_init();
           
@@ -612,10 +612,10 @@
         
         /*
          * Fonction exécutée automatiquement tous les jours par Jeedom
-         public static function cronDayly() {
-         
-         }
          */
+         public static function cronDaily() {
+         	Suivreuncolis::importAfterShip();
+         }
         
         
         
