@@ -8,13 +8,20 @@ La récupération des informations de suivi se fait toutes les heures.
 Configuration
 ===
 
-Voir la page de configuration du plugin pour obtenir saisir les clef api nécessaire : 
+Voir la page de configuration du plugin pour saisir les clef api nécessaire : 
 
 1. Créer un nouveau colis
 2. Remplir le n° de suivi
 3. Remplir le nom du transporteur ou laissez vide si inconnu
 4. Enregistrer, attendre 1 heure ou lancer le cron Plugin Cron Hourly dans le moteur des tâches.
 5. Le cron va aller chercher les infos de suivi toutes les heures.
+
+https://developer.laposte.fr/products/suivi/latest
+Prendre l'abonnement suivi
+Mettre la clef api de production
+
+Afership :
+https://docs.aftership.com/api/4/overview
 
 =======
 :icons:
