@@ -17,8 +17,7 @@ Voir la page de configuration du plugin pour saisir les clef api nécessaire :
 5. Le cron va aller chercher les infos de suivi toutes les heures.
 
 https://developer.laposte.fr/products/suivi/latest
-Prendre l'abonnement suivi
-Mettre la clef api de production
+Prendre l'abonnement suivi, puis mettre la clef api de production
 
 Afership :
 https://docs.aftership.com/api/4/overview
