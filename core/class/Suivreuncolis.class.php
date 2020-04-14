@@ -99,32 +99,16 @@
                       	$msg = $monitem['label'];
                         $lieu = '';
                         $statusbrut = $monitem['code'];
-                        switch ($statusbrut) {
-                            case 'Pending':
-                                $codetat = 0;
-                                break;
-                            case 'PC1':
-                                $codetat = 5;
-                                break;
-                            case 'ET1':
-                                $codetat = 10;
-                                break;
-                            case 'Courrier en distribution':
-                                $codetat = 30;
-                                break;
-                            case 'AttemptFail':
-                                $codetat = 35;
-                                break;
-                            case 'DI1':
-                                $codetat = 40;
-                                break;
-                            case 'Exception':
-                                $codetat = 50;
-                                break;
-                            case 'Expired':
-                                $codetat = 20;
-                                break;
-                        }
+                  
+                  		if ($statusbrut == '') $codetat = 0; 
+	                  	if ($statusbrut == 'PC1' || $statusbrut == 'PC2' || $statusbrut == 'DR1' ) $codetat = 5; 
+                  		if ($statusbrut == 'ET1' || $statusbrut == 'ET2' || $statusbrut == 'ET3' || $statusbrut == 'ET4' || $statusbrut == 'DO2' || $statusbrut == 'DO1' ) $codetat = 10; 
+	                    if ($statusbrut == 'DO3' || $statusbrut == 'PB1' || $statusbrut == 'PB2') $codetat = 50;
+                        if ($statusbrut == 'ND1' || $statusbrut == 'RE1' ) $codetat = 35; 
+	                    if ($statusbrut == 'MD2' || $statusbrut == 'EP1' ) $codetat = 30; 
+                  		if ($statusbrut == 'DI1' || $statusbrut == 'DI1' ) $codetat = 40;
+                  
+                  	log::add('Suivreuncolis', 'debug', '    debug status '.$statusbrut);
                      
                     return array($msg,$lieu,$dh,$codetat,$msg);
                     
