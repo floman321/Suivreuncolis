@@ -19,6 +19,11 @@ Voir la page de configuration du plugin pour saisir les clef api nécessaire :
 https://developer.laposte.fr/products/suivi/latest
 Prendre l'abonnement suivi, puis mettre la clef api de production
 
+Merci à @OUARZA pour cette procédure :
+1/ https://developer.laposte.fr/applications
+Puis souscrire au suivi via cette page
+2/ https://developer.laposte.fr/products/suivi/latest 1
+
 Afership :
 https://docs.aftership.com/api/4/overview
 
