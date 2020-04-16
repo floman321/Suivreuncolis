@@ -862,9 +862,16 @@ function rechercher()
                                                           
                                                           
                                                           <div class="form-group">
-                                                          <label class="col-sm-3 control-label">Code Postal Destination AfterShip (si nécessaire)</label>
+                                                          <label class="col-sm-3 control-label">Code Postal Destination (si nécessaire)</label>
                                                           <div class="col-sm-3">
                                                           <input type="text" class="eqLogicAttr configuration form-control" data-l1key="configuration" data-l2key="cp_aftership" placeholder="Code Postal destination "/>
+                                                          </div>
+                                                          </div>
+                                                          
+                                                          <div class="form-group">
+                                                          <label class="col-sm-3 control-label">Mot de passe (Ex NomExpediteur) (si nécessaire)</label>
+                                                          <div class="col-sm-3">
+                                                          <input type="text" class="eqLogicAttr configuration form-control" data-l1key="configuration" data-l2key="trackingkey_aftership" placeholder="mot de passe"/>
                                                           </div>
                                                           </div>
 
