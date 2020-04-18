@@ -170,7 +170,6 @@ function rechercher()
 	<option value='laposte'>La Poste</option>
 	<option value='sky56'>Sky56</option>
 	<option value='aliexpress'>AliExpress Shipping</option>
-	<option value='17tracks'>17 Tracks</option>
 </select>
 
 </div>
@@ -181,6 +180,7 @@ function rechercher()
 <h3>AfterShip</h3>
 
 <p>Vous devez avoir une cle API pour utiliser ce service (voir <a href='https://secure.aftership.com/apps/api'>https://secure.aftership.com/apps/api</a>)
+                                                          <p>Cette partie n'est pas obligatoire dans jeedom (utilisé pour auto création dans AfterShip)</p>
                                                                                                                   
                                                           <div class="form-group">
                                                           <label class="col-sm-3 control-label">Transporteur AfterShip</label>
