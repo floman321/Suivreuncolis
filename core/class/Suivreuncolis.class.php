@@ -162,19 +162,19 @@
                   
                     foreach ($mescolis as $monitem){
                       
-                      log::add('Suivreuncolis', 'debug', 'recupere colis essai ...');
+                      log::add('Suivreuncolis', 'debug', 'recupere colis essai ...'.$monitem['tag']);
                       
                       	$EquipementJeedom = eqLogic::byTypeAndSearhConfiguration('Suivreuncolis','"numsuivi":"'.$monitem['tracking_number'].'"');
                         if (is_array($EquipementJeedom) && count($EquipementJeedom) != 0) {
 
                           	$nbtotal = count($monitem['checkpoints']) -1;
-                            $monitem = $monitem['checkpoints'][$nbtotal];
+                            //$monitem = $monitem['checkpoints'][$nbtotal];
                           
-                            log::add('Suivreuncolis', 'debug', '  RECUPere  debug nb occurence '.$nbtotal.' '.$monitem['checkpoint_time']);
+                            log::add('Suivreuncolis', 'debug', '  RECUPere  debug nb occurence '.$nbtotal.' '.$monitem['last_updated_at']);
 
-                            $dh = str_replace('T',' ',str_replace('T00:00:00','',$monitem['checkpoint_time']));
-                            $msg = $monitem['message'];
-                            $lieu = $monitem['location'];
+                            $dh = str_replace('T',' ',str_replace(array('T00:00:00','+00:00'),'',$monitem['last_updated_at']));
+                            $msg = $monitem['checkpoints'][$nbtotal]['message'];
+                            $lieu = $monitem['checkpoints'][$nbtotal]['location'];
                             $statusbrut = $monitem['tag'];
 
                             switch ($statusbrut) {
@@ -203,6 +203,8 @@
                                     $codetat = 20;
                                     break;
                             }
+                          
+                          log::add('Suivreuncolis', 'debug', '-----------recupere code etat '.$statusbrut.'/'.$codetat.'/'.$monitem['id']." colis aftership");
 
                           	Suivreuncolis::majcmdEquipement($EquipementJeedom[0],$msg,$lieu,$dh,$codetat,$msg);
 
@@ -384,7 +386,7 @@
                     }
           
           
-           //$suivreUnColis->refreshWidget();
+           $suivreUnColis->refreshWidget();
           
           
         }
