@@ -127,7 +127,7 @@
             return array('','','');
         }
       
-        function AfterShipRecupere ($NumEnvoi,$Transporteur,$postalcode = '') {
+        function AfterShipRecupere () {
             
             $apikey = config::byKey('api_aftership', 'suivreuncolis','');
             
@@ -136,85 +136,87 @@
                 return array("","","","","");
             }
             
+          	log::add('Suivreuncolis', 'debug', ' RECUPERE AfterShip ');
+          
             $ch = curl_init();
-            
-			$Transporteur = strtolower(str_replace(' ','',$Transporteur));
-			
-            
-            
-            if ($postalcode != ''){
-				$postalcode = "?tracking_postal_code=".$postalcode."&lang=en";
-			}else{
- 	             $postalcode = "?lang=en";
-            }
-			
-			log::add('Suivreuncolis', 'debug', '  httpdebug ' . "https://api.aftership.com/v4/trackings/$Transporteur/$NumEnvoi$postalcode");
-			
-            curl_setopt($ch, CURLOPT_URL,"https://api.aftership.com/v4/trackings/$Transporteur/$NumEnvoi$postalcode");
-            curl_setopt($curl_handle, CURLOPT_CUSTOMREQUEST, 'GET');
+          
+            curl_setopt($ch, CURLOPT_URL,"https://api.aftership.com/v4/trackings?lang=en");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
             curl_setopt($ch,CURLOPT_HTTPHEADER,array('aftership-api-key: '.$apikey,'Content-Type: application/json'));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             
             if( ! $server_output = curl_exec($ch)) {
                 
-                log::add('Suivreuncolis', 'debug', 'httperror aftership' . "https://api.aftership.com/v4/trackings/$Transporteur/$NumEnvoi");
+                log::add('Suivreuncolis', 'debug', 'httperror' . "https://api.aftership.com/v4/trackings ".curl_error($ch));
                 
-                return array("","","","");
+                return '';
             }else{
-                
+              
                 $data = json_decode($server_output, true);
               
-                if ($data['meta']['code'] == 200 ){
+              	if ($data['meta']['code'] == 200 ){
                   
-                    $nbtotal = count($data['data']['tracking']['checkpoints']) -1;
+                  $mescolis = $data['data']['trackings'];
                   
-                    $monitem = $data['data']['tracking']['checkpoints'][$nbtotal];
-                                    
-   	                log::add('Suivreuncolis', 'debug', '    debug nb occurence '.$nbtotal.' '.$monitem['checkpoint_time']);
+                  log::add('Suivreuncolis', 'debug', 'recupere 200 '.count($mescolis)." colis aftership");
+                  
+                    foreach ($mescolis as $monitem){
+                      
+                      log::add('Suivreuncolis', 'debug', 'recupere colis essai ...');
+                      
+                      	$EquipementJeedom = eqLogic::byTypeAndSearhConfiguration('Suivreuncolis','"numsuivi":"'.$monitem['tracking_number'].'"');
+                        if (is_array($EquipementJeedom) && count($EquipementJeedom) != 0) {
 
-                    $dh = str_replace('T',' ',str_replace('T00:00:00','',$monitem['checkpoint_time']));
-                    $msg = $monitem['message'];
-                    $lieu = $monitem['location'];
-                    $statusbrut = $monitem['tag'];
-               
-                    switch ($statusbrut) {
-                        case 'Pending':
-                            $codetat = 0;
-                            break;
-                        case 'InfoReceived':
-                            $codetat = 5;
-                            break;
-                        case 'InTransit':
-                            $codetat = 10;
-                            break;
-                        case 'OutForDelivery':
-                            $codetat = 30;
-                            break;
-                        case 'AttemptFail':
-                            $codetat = 35;
-                            break;
-                        case 'Delivered':
-                            $codetat = 40;
-                            break;
-                        case 'Exception':
-                            $codetat = 50;
-                            break;
-                        case 'Expired':
-                            $codetat = 20;
-                            break;
+                          	$nbtotal = count($monitem['checkpoints']) -1;
+                            $monitem = $monitem['checkpoints'][$nbtotal];
+                          
+                            log::add('Suivreuncolis', 'debug', '  RECUPere  debug nb occurence '.$nbtotal.' '.$monitem['checkpoint_time']);
+
+                            $dh = str_replace('T',' ',str_replace('T00:00:00','',$monitem['checkpoint_time']));
+                            $msg = $monitem['message'];
+                            $lieu = $monitem['location'];
+                            $statusbrut = $monitem['tag'];
+
+                            switch ($statusbrut) {
+                                case 'Pending':
+                                    $codetat = 0;
+                                    break;
+                                case 'InfoReceived':
+                                    $codetat = 5;
+                                    break;
+                                case 'InTransit':
+                                    $codetat = 10;
+                                    break;
+                                case 'OutForDelivery':
+                                    $codetat = 30;
+                                    break;
+                                case 'AttemptFail':
+                                    $codetat = 35;
+                                    break;
+                                case 'Delivered':
+                                    $codetat = 40;
+                                    break;
+                                case 'Exception':
+                                    $codetat = 50;
+                                    break;
+                                case 'Expired':
+                                    $codetat = 20;
+                                    break;
+                            }
+
+                          	Suivreuncolis::majcmdEquipement($EquipementJeedom[0],$msg,$lieu,$dh,$codetat,$msg);
+
+                        }
+                      
                     }
-                 
-                    return array($msg,$lieu,$dh,$codetat,$msg);
-                    
-                }else{
-                    log::add('Suivreuncolis', 'debug', 'httpok code error'. $data['meta']['code'] . ' key = '.$apikey );
-                    return array("","","","","");
                 }
-                
             }
-            
-            
-            return array('','','');
+          
+                    
+                 
+                
+          
+          
             
         }
         
@@ -267,55 +269,6 @@
             
         }
 		
-		public static function APIServices($numsuivi,$NumOperator) {
-            
-			
-            $ch = curl_init();
-            
-            curl_setopt($ch, CURLOPT_URL,"https://www.17track.net/restapi/handlertrack.ashx");
-            curl_setopt($ch, CURLOPT_POST, 1);
-            
-            if ($NumOperator == ''){
-                curl_setopt($ch, CURLOPT_POSTFIELDS,'{"data":[{"num":"'.$numsuivi.'"}]}');
-            }else{
-                curl_setopt($ch, CURLOPT_POSTFIELDS,'{"data":[{"num":"'.$numsuivi.'","fc":"'.$NumOperator.'"}]}');
-            }
-                        
-            // receive server response ...
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            
-            if( ! $server_output = curl_exec($ch)) {
-                
-                log::add('Suivreuncolis', 'debug', 'httperror');
-                
-                return array("","","","");
-            }
-            
-            log::add('Suivreuncolis', 'debug', 'httpok Numero colis '.$numsuivi.' '.$server_output);
-                        
-            curl_close ($ch);
-            
-            $data = json_decode($server_output, true);
-          
-            
-            if ($data['dat'][0]['delay'] == 0  || $data['ret'] != '1'){
-                
-                log::add('Suivreuncolis', 'debug', ' Ok Numero colis '.$numsuivi.' code '.$data['ret']);
-                
-                $codetraduit = Suivreuncolis::CodeToHTML($data['dat'][0]['track']['e']);
-              
-				//var_dump($data['dat'][0]['track']['z0']);
-                
-                return array($codetraduit , $data['dat'][0]['track']['z0']['d'] . ', '.$data['dat'][0]['track']['z0']['c'] , $data['dat'][0]['track']['z0'][a] , $data['dat'][0]['track']['e'] , $data['dat'][0]['track']['z0']['z'] );
-                
-            }else{
-                
-                log::add('Suivreuncolis', 'debug', 'httpnok saturation not ok code erreur '.$data['ret'].'- delay '.$data['dat'][0]['delay']);
-                return array("-99","","","","");
-                
-            }
-            
-        }
         
         function SkyRecupere($NumEnvoi) {
             
@@ -350,60 +303,15 @@
             
         }
         
-        
-        
-        public static function MAJColis() {
-            
-            foreach (self::byType('Suivreuncolis') as $suivreUnColis) {
-                
-                if ($suivreUnColis->getIsEnable() == 1) {
-                    
-                    $nom = $suivreUnColis->getName();
-                    $transnom = $suivreUnColis->getConfiguration('transporteur','');
-                    $numcolis = $suivreUnColis->getConfiguration('numsuivi',0);
-                    $lecommentaire = $suivreUnColis->getConfiguration('commentaire','');
-                    $transporteurAftership = $suivreUnColis->getConfiguration('transaftership','');
-					$cp = $suivreUnColis->getConfiguration('cp_aftership','');
-					$ac = $suivreUnColis->getConfiguration('autocreate',0);
-					$ad = $suivreUnColis->getConfiguration('autodekete',0);
-
-                    $etat = '';
-                  
-                    if ($numcolis == '') continue;
-                    
-                    
-                    log::add('Suivreuncolis', 'debug', 'refreshdata MAJColis essai '.$transnom.' Nom Colis : '.$nom);
-                    log::add('Suivreuncolis', 'debug', '  AutoCreate = '.$ac.' AutoDelete : '.$ad);
-                    
-                      switch ($transnom) {
-                          case "sky56":
-                              list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::SkyRecupere($numcolis);
-                              break;
-                        case "aliexpress":
-                              list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::AliexpressShippingRecupere($numcolis);
-                              break;
-                          case "aftership":
-                              list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::AfterShipRecupere($numcolis,$transporteurAftership,$cp);
-                              break;
-                          case "laposte":
-                              list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::LaPosteRecupere($numcolis);
-                              break;
-						  case "17tracks":
-							log::add('Suivreuncolis', 'debug', 'httpok 17tracks');
-							  list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::APIServices($numcolis,'');
-							break;
-							
-                          default:
-							
-                      }
-                      
-                    }
-					
-					if ($etat == '-99') return;
-					
-              		$notif = config::byKey('notificationpar', 'suivreuncolis','');
-              
-                    foreach ($suivreUnColis->getCmd() as $cmd) {
+      
+      	public static function majcmdEquipement($suivreUnColis,$etat,$lieu,$dateheure,$codeetat,$msgtransporteur){
+          
+         $nom = $suivreUnColis->getName();
+         $lecommentaire = $suivreUnColis->getConfiguration('commentaire','');
+          
+          log::add('Suivreuncolis', 'debug', 'majcmdEquipement '.$nom);
+          
+         foreach ($suivreUnColis->getCmd() as $cmd) {
                         $v = $cmd->getName();
                         
                         if ($v == 'codeetat'){
@@ -474,31 +382,88 @@
                         }
                         
                     }
+          
+          
+           //$suivreUnColis->refreshWidget();
+          
+          
+        }
+        
+        
+        public static function MAJColis() {
+          
+          Suivreuncolis::AfterShipRecupere();
+          
+          $notif = config::byKey('notificationpar', 'suivreuncolis','');
+            
+            foreach (self::byType('Suivreuncolis') as $suivreUnColis) {
+                
+                if ($suivreUnColis->getIsEnable() == 1) {
                     
-                    $suivreUnColis->refreshWidget();
-					
-					//Si le colis est livré depuis 15 jours, alors on le supprime de la liste
+                    $nom = $suivreUnColis->getName();
+                    $transnom = $suivreUnColis->getConfiguration('transporteur','');
+                    $numcolis = $suivreUnColis->getConfiguration('numsuivi',0);
+                    $transporteurAftership = $suivreUnColis->getConfiguration('transaftership','');
+					$cp = $suivreUnColis->getConfiguration('cp_aftership','');
+					$ac = $suivreUnColis->getConfiguration('autocreate',0);
+					$ad = $suivreUnColis->getConfiguration('autodelete',0);
+
+                    $etat = '';
+                  
+                    if ($numcolis == '') continue;
+                    
+                    
+                    log::add('Suivreuncolis', 'debug', 'refreshdata MAJColis essai '.$transnom.' Nom Colis : '.$nom);
+                    log::add('Suivreuncolis', 'debug', '  AutoCreate = '.$ac.' AutoDelete : '.$ad);
+                  
+                  	//Si le colis est livré depuis 15 jours, alors on le supprime de la liste
 					$interval =  floor( (((time() - strtotime($dateheure))/60)/60)/24);
 					log::add('Suivreuncolis', 'debug', '    codeetat : '.$codeetat.' dateheure : '.$dateheure.'  -> +'.$interval.'J');
 					if ($codeetat == '40' && $interval >= 15) {
 						$suivreUnColis->remove();
-						log::add('Suivreuncolis', 'debug', '      Colis livré et vieux de plus de 15 jours -> suppression');
+                      	continue;
+						log::add('Suivreuncolis', 'debug', 'Colis livré et vieux de plus de 15 jours -> suppression');
 					} else {						
-						log::add('Suivreuncolis', 'debug', '      Colis non livré ou livré depuis moins de 15 jours -> pas de suppression');
+						log::add('Suivreuncolis', 'debug', 'Colis non livré ou livré depuis moins de 15 jours -> pas de suppression');
 					}
+                    
+                      switch ($transnom) {
+                          case "sky56":
+                              list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::SkyRecupere($numcolis);
+                              Suivreuncolis::majcmdEquipement($suivreUnColis,$etat,$lieu,$dateheure,$codeetat,$msgtransporteur);
+                              break;
+                        case "aliexpress":
+                              list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::AliexpressShippingRecupere($numcolis);
+                          	  Suivreuncolis::majcmdEquipement($suivreUnColis,$etat,$lieu,$dateheure,$codeetat,$msgtransporteur);
+                              break;
+                          case "laposte":
+                              list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::LaPosteRecupere($numcolis);
+                          	  Suivreuncolis::majcmdEquipement($suivreUnColis,$etat,$lieu,$dateheure,$codeetat,$msgtransporteur);
+                              break;
+							break;
+							
+                          default:
+							
+                      }
+                      
+                    }
+					
+              		
                 }
              
         }
+      
+      	
       
       
         public static function importAfterShip(){
           
           $apikey = config::byKey('api_aftership', 'suivreuncolis','');
 				
-				if ($apikey == ''){
-					log::add('Suivreuncolis', 'debug', 'Api key Aftership manquante'.$apikey );
-					return '';
-				}
+          if ($apikey == ''){
+            log::add('Suivreuncolis', 'debug', 'Api key Aftership manquante'.$apikey );
+            return '';
+          }
           
             
            log::add('Suivreuncolis', 'debug', ' importAfterShip ');
@@ -522,8 +487,11 @@
               	if ($data['meta']['code'] == 200 ){
                   
                   $mescolis = $data['data']['trackings'];
+                  log::add('Suivreuncolis', 'debug', 'http 200 import');
                   
                     foreach ($mescolis as $moncolis){
+                      
+                      log::add('Suivreuncolis', 'debug', 'http colis ');
                       
                       if (eqLogic::byTypeAndSearhConfiguration('Suivreuncolis','"numsuivi":"'.$moncolis['tracking_number'].'"') == null){
 						$nom = "SansNom";
@@ -563,7 +531,7 @@
 							$mynewcolis->toHtml('dashboard');
 							$mynewcolis->refreshWidget();
 						} else {
-							log::add('Suivreuncolis', 'debug', '   - Colis livré pas d import : '.$moncolis['shipment_delivery_date']);
+							log::add('Suivreuncolis', 'debug', '   - Colis déja livré pas d import : '.$moncolis['shipment_delivery_date']);
 						}
                       }
                       
@@ -580,11 +548,12 @@
         /*     * ***********************Methode static*************************** */
         
         /*
-         * Fonction exécutée automatiquement toutes les minutes par Jeedom
+        // * Fonction exécutée automatiquement toutes les minutes par Jeedom
          public static function cron() {
+         	Suivreuncolis::MAJColis(); 
+ 
+         }*/
          
-         }
-         */
         
         //* Fonction exécutée automatiquement toutes les heures par Jeedom
         public static function cronHourly() {
@@ -705,6 +674,7 @@
         }
         
         public function postSave() {
+          
 			
 		
 			$transnom = $this->getConfiguration('transporteur','');
