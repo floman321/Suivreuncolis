@@ -311,6 +311,8 @@
          $nom = $suivreUnColis->getName();
          $lecommentaire = $suivreUnColis->getConfiguration('commentaire','');
           
+          
+          $notif = config::byKey('notificationpar', 'suivreuncolis','');
           log::add('Suivreuncolis', 'debug', 'majcmdEquipement '.$nom);
           
          foreach ($suivreUnColis->getCmd() as $cmd) {
@@ -395,8 +397,6 @@
         public static function MAJColis() {
           
           Suivreuncolis::AfterShipRecupere();
-          
-          $notif = config::byKey('notificationpar', 'suivreuncolis','');
             
             foreach (self::byType('Suivreuncolis') as $suivreUnColis) {
                 
