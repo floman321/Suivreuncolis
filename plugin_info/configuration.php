@@ -25,87 +25,89 @@ if (!isConnect()) {
 ?>
 
 <form class="form-horizontal">
-<fieldset>
-<div class="form-group">
-<label class="col-sm-4 control-label">Cle API AfterShip</label>
-<div class="col-sm-4">
-<input class="configKey form-control" data-l1key="api_aftership" />
-</div>
-</div>
-  
-  <form class="form-horizontal">
-<fieldset>
-<div class="form-group">
-<label class="col-sm-4 control-label">Cle API LaPoste : (<a href="https://developer.laposte.fr/products/suivi/latest">Lien vers formuluraire</a>) </label>
-<div class="col-sm-4">
-<input class="configKey form-control" data-l1key="api_laposte" />
-</div>
-</div>
-  
-<div class="form-group">
-<label class="col-sm-4 control-label">A la création d'un colis, l' objet parent est : </label>
-<div class="col-sm-4">
-    
-  <select class="configKey form-control" data-l1key="objetpardefaut">
-  	<option value="">Aucun</option>
-  
-  <?php
-    $allObject = jeeObject::all(true);
+    <fieldset>
+        <div class="form-group">
+            <label class="col-sm-4 control-label">Cle API AfterShip</label>
+            <div class="col-sm-4">
+                <input class="configKey form-control" data-l1key="api_aftership"/>
+            </div>
+        </div>
 
-    foreach ($allObject as $object_li) {
-       echo '<option value="'.$object_li->getId().'">'. $object_li->getHumanName(true) . '</option>';
-    }
-  ?>
-     </select>
-  
-</div>
-</div>
+        <form class="form-horizontal">
+            <fieldset>
+                <div class="form-group">
+                    <label class="col-sm-4 control-label">Cle API LaPoste : (<a
+                                href="https://developer.laposte.fr/products/suivi/latest">Lien vers formuluraire</a>)
+                    </label>
+                    <div class="col-sm-4">
+                        <input class="configKey form-control" data-l1key="api_laposte"/>
+                    </div>
+                </div>
 
-    
-<div class="form-group">
-<label class="col-sm-4 control-label">Notifier les changements par : </label>
-<div class="col-sm-4">
-<select class="configKey form-control" id="notifType" data-l1key="notificationpar">
-					<option value="">Aucun</option>
-                    <option value="jeedom_msg">Message jeedom</option>
-                    <option value="cmd">Commande jeedom Action  </option>
-  </select>
-</div>
+                <div class="form-group">
+                    <label class="col-sm-4 control-label">A la création d'un colis, l' objet parent est : </label>
+                    <div class="col-sm-4">
 
-</div>
-<div id="notifConfig" style="display : none;">
-            <div class="form-group">
-                <label class="col-sm-4 control-label">{{Action avec type message}}</label>
-                <div class="col-sm-4">
-                    <div class="input-group">
-                        <input class="form-control configKey input-sm" data-l1key="cmd_notif"/>
-                        <span class="input-group-btn">
-                          <a class="btn btn-default btn-sm listCmdInfo btn-warning"  data-input="cmd_notif"><i class="fa fa-list-alt"></i></a>
+                        <select class="configKey form-control" data-l1key="objetpardefaut">
+                            <option value="">Aucun</option>
+
+                            <?php
+                            $allObject = jeeObject::all(true);
+
+                            foreach ($allObject as $object_li) {
+                                echo '<option value="' . $object_li->getId() . '">' . $object_li->getHumanName(true) . '</option>';
+                            }
+                            ?>
+                        </select>
+
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-4 control-label">Notifier les changements par : </label>
+                    <div class="col-sm-4">
+                        <select class="configKey form-control" id="notifType" data-l1key="notificationpar">
+                            <option value="">Aucun</option>
+                            <option value="jeedom_msg">Message jeedom</option>
+                            <option value="cmd">Commande jeedom Action</option>
+                        </select>
+                    </div>
+
+                </div>
+                <div id="notifConfig" style="display : none;">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">{{Action avec type message}}</label>
+                        <div class="col-sm-4">
+                            <div class="input-group">
+                                <input class="form-control configKey input-sm" data-l1key="cmd_notif"/>
+                                <span class="input-group-btn">
+                          <a class="btn btn-default btn-sm listCmdInfo btn-warning" data-input="cmd_notif"><i
+                                      class="fa fa-list-alt"></i></a>
                       </span>
-                  </div>
-              </div>
-          </div>
-      </div>
-
-  
-</fieldset>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
 
+            </fieldset>
 
-</form>
-<script>
 
-$('#notifType').on('change', function () {
-    if($(this).value() == 'cmd'){
-        $('#notifConfig').show();
-    }else{
-       $('#notifConfig').hide();
-   }
-});
- $("#notifConfig").delegate(".listCmdInfo", 'click', function () {
-    var el = $('.configKey[data-l1key=' + $(this).attr('data-input') + ']');
-    jeedom.cmd.getSelectModal({cmd: {type: 'action', subtype: 'message'}}, function (result) {
-        el.atCaret('insert', result.human);
-    });
-});
-</script>
+        </form>
+        <script>
+
+            $('#notifType').on('change', function () {
+                if ($(this).value() == 'cmd') {
+                    $('#notifConfig').show();
+                } else {
+                    $('#notifConfig').hide();
+                }
+            });
+            $("#notifConfig").delegate(".listCmdInfo", 'click', function () {
+                var el = $('.configKey[data-l1key=' + $(this).attr('data-input') + ']');
+                jeedom.cmd.getSelectModal({cmd: {type: 'action', subtype: 'message'}}, function (result) {
+                    el.atCaret('insert', result.human);
+                });
+            });
+        </script>
