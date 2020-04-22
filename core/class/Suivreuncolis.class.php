@@ -77,7 +77,7 @@ class Suivreuncolis extends eqLogic {
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL,"https://api.laposte.fr/suivi/v2/idships/$NumEnvoi?lang=fr_FR");
-        curl_setopt($curl_handle, CURLOPT_CUSTOMREQUEST, 'GET');
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
         curl_setopt($ch,CURLOPT_HTTPHEADER,array('Accept: application/json','X-Forwarded-For: 123.123.123.123','X-Okapi-Key: '.$apikey));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
@@ -267,7 +267,7 @@ class Suivreuncolis extends eqLogic {
             return array("Votre colis est en cours de livraison ",'',$date_,10,$description);
         }
 
-        return array($etat_,'',$date,10,$description);
+        return array($etat_,'',$date_,10,$description);
 
     }
 
@@ -310,7 +310,7 @@ class Suivreuncolis extends eqLogic {
 
         $nom = $suivreUnColis->getName();
         $lecommentaire = $suivreUnColis->getConfiguration('commentaire','');
-
+        $numcolis = $suivreUnColis->getConfiguration('numsuivi','');
 
         $notif = config::byKey('notificationpar', 'suivreuncolis','');
         log::add('Suivreuncolis', 'debug', 'majcmdEquipement '.$nom);
@@ -352,17 +352,11 @@ class Suivreuncolis extends eqLogic {
 
         $suivreUnColis->checkAndUpdateCmd('codeetat', $codeetat);
         $suivreUnColis->refreshWidget();
-
-
     }
 
 
     public static function MAJColis() {
-
         Suivreuncolis::AfterShipRecupere();
-
-        $notif = config::byKey('notificationpar', 'suivreuncolis','');
-
         foreach (self::byType('Suivreuncolis') as $suivreUnColis) {
 
             if ($suivreUnColis->getIsEnable() == 1) {
@@ -370,12 +364,17 @@ class Suivreuncolis extends eqLogic {
                 $nom = $suivreUnColis->getName();
                 $transnom = $suivreUnColis->getConfiguration('transporteur','');
                 $numcolis = $suivreUnColis->getConfiguration('numsuivi',0);
-                $transporteurAftership = $suivreUnColis->getConfiguration('transaftership','');
-                $cp = $suivreUnColis->getConfiguration('cp_aftership','');
                 $ac = $suivreUnColis->getConfiguration('autocreate',0);
                 $ad = $suivreUnColis->getConfiguration('autodelete',0);
+                $codeetatCmd =  $suivreUnColis->getCmd(null, 'codeetat');
+                if(is_object($codeetatCmd)){
+                    $codeetat = $codeetatCmd->execCmd();
+                }
+                $dateheureCmd =  $suivreUnColis->getCmd(null, 'dateheure');
+                if(is_object($dateheureCmd)){
+                    $dateheure = $dateheureCmd->execCmd();
+                }
 
-                $etat = '';
 
                 if ($numcolis == '') continue;
 
@@ -407,12 +406,8 @@ class Suivreuncolis extends eqLogic {
                         list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::LaPosteRecupere($numcolis);
                         Suivreuncolis::majcmdEquipement($suivreUnColis,$etat,$lieu,$dateheure,$codeetat,$msgtransporteur);
                         break;
-
                 }
-
             }
-
-
         }
 
     }
@@ -711,16 +706,27 @@ class Suivreuncolis extends eqLogic {
         /*
         Après chaque mise à jour, si la commande est vide, elle sera masquee sur le dashboard
         */
-        $cmds = $this->getCmd();
-        foreach ($cmds as $cmd) {
-            if($cmd->getName()!='codeetat'){
+        foreach ($this->getCmd() as $cmd) {
+            if($cmd->getLogicalId()!='codeetat'){
                 if($cmd->execCmd() != ''){
                     $cmd->setIsVisible(1);
                 }else{
                     $cmd->setIsVisible(0);
                 }
-
                 $cmd->save();
+            }
+        }
+        //Si l'état et le msg transporteur sont identiques, on masque le msgtransporteur
+        $cmdEtat =  $this->getCmd(null, 'etat');
+        $etat = null;
+        if(is_object($cmdEtat)){
+            $etat = $cmdEtat->execCmd();
+        }
+        $cmdMsgTransporteur =  $this->getCmd(null, 'msgtransporteur');
+        if(is_object($cmdMsgTransporteur)){
+            if($etat == $cmdMsgTransporteur->execCmd()){
+                $cmdMsgTransporteur->setIsVisible(0);
+                $cmdMsgTransporteur->save();
             }
         }
     }

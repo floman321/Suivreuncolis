@@ -30,7 +30,7 @@ function Suivreuncolis_update()
         je place les logicalId afin de pouvoir rechercher les commandes facilement.
         Je met également le widget sur le codeetat
     */
-    foreach (self::byType('Suivreuncolis') as $eqLogic) {
+    foreach (eqLogic::byType('Suivreuncolis') as $eqLogic) {
         $cmds = $eqLogic->getCmd();
         foreach ($cmds as $cmd) {
             if ($cmd->getName() == 'codeetat') {
