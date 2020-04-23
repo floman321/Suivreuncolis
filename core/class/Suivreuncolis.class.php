@@ -499,7 +499,7 @@ class Suivreuncolis extends eqLogic {
     public static function createListEqLogic() {
         $eqLogic = eqLogic::byLogicalId('list', 'Suivreuncolis');
         if (!is_object($eqLogic)) {
-            $eqLogic = new gsl();
+            $eqLogic = new Suivreuncolis();
             $eqLogic->setName('Liste');
             $eqLogic->setLogicalId('list');
             $eqLogic->setEqType_name('Suivreuncolis');
@@ -538,9 +538,6 @@ class Suivreuncolis extends eqLogic {
     /*     * *********************Méthodes d'instance************************* */
 
     public function preInsert() {
-        if($this->getLogicalId() == 'list'){
-            return;
-        }
         $objetpardefaut = config::byKey('objetpardefaut', 'suivreuncolis','');
         if ( $objetpardefaut == ''){
         }else{
@@ -812,7 +809,7 @@ class Suivreuncolis extends eqLogic {
         return $return;
     }
 
-    public function buildData() {
+    public function buildList() {
         if ($this->getLogicalId() == 'list') {
             return;
         }
@@ -852,7 +849,7 @@ class Suivreuncolis extends eqLogic {
                 if ($eqLogic->getLogicalId() == 'list') {
                     continue;
                 }
-                $data[$eqLogic->getId()] = $eqLogic->buildData();
+                $data[$eqLogic->getId()] = $eqLogic->buildList();
                 $replace['#colis#'] .= '<div class="row">';
                 $replace['#colis#'] .= '<div class="col">'.$eqLogic->getName().'</div>';
                 $replace['#colis#'] .= '<div class="col">'.$data[$eqLogic->getId()]['etat'].'</div>';
@@ -861,7 +858,7 @@ class Suivreuncolis extends eqLogic {
             $replace['#colis#'] .= '</div>';
             return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, 'Suivreuncolis_list', 'Suivreuncolis')));
         } else {
-            return;
+            return parent::toHtml($_version);
         }
     }
 
