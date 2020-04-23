@@ -25,12 +25,16 @@ function Suivreuncolis_install()
 
 function Suivreuncolis_update()
 {
+    Suivreuncolis::createListEqLogic();
     /*
         Code temporaire, à la mise à jour du plugin,
         je place les logicalId afin de pouvoir rechercher les commandes facilement.
         Je met également le widget sur le codeetat
     */
     foreach (eqLogic::byType('Suivreuncolis') as $eqLogic) {
+        if($eqLogic->getLogicalId() == 'list'){
+            continue;
+        }
         $cmds = $eqLogic->getCmd();
         foreach ($cmds as $cmd) {
             if ($cmd->getName() == 'codeetat') {
@@ -71,4 +75,3 @@ function Suivreuncolis_remove()
 
 }
 
-?>

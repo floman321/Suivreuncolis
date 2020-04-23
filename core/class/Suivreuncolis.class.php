@@ -213,13 +213,6 @@ class Suivreuncolis extends eqLogic {
                 }
             }
         }
-
-
-
-
-
-
-
     }
 
 
@@ -299,8 +292,6 @@ class Suivreuncolis extends eqLogic {
         if ( $etat_ == 'votre colis a été expédié par votre webmarchand, mais n a pas encore été pris en charge par colis privé') {
             return array($etat_,'',$date_,10,$msg_);
         }
-
-
         return array($etat_,'',$date_,10,$msg_);
 
     }
@@ -314,7 +305,6 @@ class Suivreuncolis extends eqLogic {
 
         $notif = config::byKey('notificationpar', 'suivreuncolis','');
         log::add('Suivreuncolis', 'debug', 'majcmdEquipement '.$nom);
-
 
         //Simplification de la mise à jour des commandes
         $suivreUnColis->checkAndUpdateCmd('lieu', $lieu);
@@ -359,6 +349,9 @@ class Suivreuncolis extends eqLogic {
         Suivreuncolis::AfterShipRecupere();
         foreach (self::byType('Suivreuncolis') as $suivreUnColis) {
 
+            if($suivreUnColis->getLogicalId() == 'list'){
+                return;
+            }
             if ($suivreUnColis->getIsEnable() == 1) {
 
                 $nom = $suivreUnColis->getName();
@@ -503,6 +496,19 @@ class Suivreuncolis extends eqLogic {
         return 'ok';
     }
 
+    public static function createListEqLogic() {
+        $eqLogic = eqLogic::byLogicalId('list', 'Suivreuncolis');
+        if (!is_object($eqLogic)) {
+            $eqLogic = new gsl();
+            $eqLogic->setName('Liste');
+            $eqLogic->setLogicalId('list');
+            $eqLogic->setEqType_name('Suivreuncolis');
+            $eqLogic->setIsVisible(1);
+            $eqLogic->setIsEnable(1);
+            $eqLogic->save();
+        }
+    }
+
 
     /*     * ***********************Methode static*************************** */
 
@@ -532,6 +538,9 @@ class Suivreuncolis extends eqLogic {
     /*     * *********************Méthodes d'instance************************* */
 
     public function preInsert() {
+        if($this->getLogicalId() == 'list'){
+            return;
+        }
         $objetpardefaut = config::byKey('objetpardefaut', 'suivreuncolis','');
         if ( $objetpardefaut == ''){
         }else{
@@ -540,6 +549,9 @@ class Suivreuncolis extends eqLogic {
     }
 
     public function postInsert() {
+        if($this->getLogicalId() == 'list'){
+            return;
+        }
         $cmd = new SuivreuncolisCmd();
         $cmd->setName('Code état');
         $cmd->setLogicalId('codeetat');
@@ -657,7 +669,9 @@ class Suivreuncolis extends eqLogic {
 
     public function postSave() {
 
-
+        if($this->getLogicalId() == 'list'){
+            return;
+        }
 
         $transnom = $this->getConfiguration('transporteur','');
         $autcreation = $this->getConfiguration('autocreate','1');
@@ -698,11 +712,10 @@ class Suivreuncolis extends eqLogic {
 
     }
 
-    public function preUpdate() {
-
-    }
-
     public function postUpdate() {
+        if($this->getLogicalId() == 'list'){
+            return;
+        }
         /*
         Après chaque mise à jour, si la commande est vide, elle sera masquee sur le dashboard
         */
@@ -731,13 +744,12 @@ class Suivreuncolis extends eqLogic {
         }
     }
 
-    public function preRemove() {
-
-    }
 
     public function postRemove() {
 
-
+        if($this->getLogicalId() == 'list'){
+            return;
+        }
         $transnom = $this->getConfiguration('transporteur','');
         $autdelete = $this->getConfiguration('autodelete','0');
 
@@ -799,6 +811,60 @@ class Suivreuncolis extends eqLogic {
         );
         return $return;
     }
+
+    public function buildData() {
+        if ($this->getLogicalId() == 'list') {
+            return;
+        }
+        $return = array(
+            'id' => $this->getLogicalId(),
+            'name' => $this->getName(),
+        );
+        $cmds = $this->getCmd('info');
+        foreach ($cmds as $cmd) {
+            $return[$cmd->getLogicalId()] = $cmd->execCmd();
+            if ($cmd->getLogicalId() == 'dateheure') {
+                $timestamp = $return[$cmd->getLogicalId()];
+                $return['horodatage'] = "le " . date("d/m/Y à H:i", strtotime($timestamp));
+            }
+        }
+        return $return;
+    }
+
+    public function toHtml($_version = 'dashboard') {
+        $replace = $this->preToHtml($_version, array(), true);
+        if (!is_array($replace)) {
+            return $replace;
+        }
+        $version = jeedom::versionAlias($_version);
+        $replace['#text_color#'] = $this->getConfiguration('text_color');
+        $replace['#version#'] = $_version;
+        $replace['#logicalId#'] = $this->getLogicalId();
+        $refresh = $this->getCmd(null, 'refresh');
+        if (is_object($refresh)) {
+            $replace['#refresh_id#'] = $refresh->getId();
+        }
+        if ($this->getLogicalId() == 'list') {
+            $replace['#colis#'] = '<div class="container">';
+            $data = array();
+            $eqLogics = self::byType('Suivreuncolis', true);
+            foreach ($eqLogics as $eqLogic) {
+                if ($eqLogic->getLogicalId() == 'list') {
+                    continue;
+                }
+                $data[$eqLogic->getId()] = $eqLogic->buildData();
+                $replace['#colis#'] .= '<div class="row">';
+                $replace['#colis#'] .= '<div class="col">'.$eqLogic->getName().'</div>';
+                $replace['#colis#'] .= '<div class="col">'.$data[$eqLogic->getId()]['etat'].'</div>';
+                $replace['#colis#'] .= '</div>';
+            }
+            $replace['#colis#'] .= '</div>';
+            return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, 'Suivreuncolis_list', 'Suivreuncolis')));
+        } else {
+            return;
+        }
+    }
+
 
 }
 
