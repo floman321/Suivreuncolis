@@ -14,15 +14,38 @@
  * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-$("#table_cmd").sortable({
-    axis: "y",
-    cursor: "move",
-    items: ".cmd",
-    placeholder: "ui-state-highlight",
-    tolerance: "intersect",
-    forcePlaceholderSize: true
-});
+$("#table_cmd").sortable({axis: "y", cursor: "move", items: ".cmd", placeholder: "ui-state-highlight", tolerance: "intersect", forcePlaceholderSize: true});
+/*
+ * Fonction pour l'ajout de commande, appellé automatiquement par plugin.template
+ */
+function addCmdToTable(_cmd) {
+    if (!isset(_cmd)) {
+        var _cmd = {configuration: {}};
+    }
+    if (!isset(_cmd.configuration)) {
+        _cmd.configuration = {};
+    }
+    var tr = '<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '">';
+    tr += '<td>';
+    tr += '<span class="cmdAttr" data-l1key="id"></span>';
+    tr += '</td>';
+    tr += '<td>';
+    tr += '<input class="cmdAttr form-control input-sm" data-l1key="name" placeholder="{{Nom}}">';
+    tr += '</td>';
+    tr += '<td>';
+    tr += '<span><label class="checkbox-inline"><input type="checkbox" class="cmdAttr checkbox-inline" data-l1key="isVisible" checked/>{{Afficher}}</label></span> ';
+    tr += '</td>';
+    tr += '<td>';
+    if (is_numeric(_cmd.id)) {
+        tr += '<a class="btn btn-default btn-xs cmdAction" data-action="configure"><i class="fa fa-cogs"></i></a> ';
+        tr += '<a class="btn btn-default btn-xs cmdAction" data-action="test"><i class="fa fa-rss"></i> {{Tester}}</a>';
+    }
+    //tr += '<i class="fa fa-minus-circle pull-right cmdAction cursor" data-action="remove"></i>';
+    tr += '</td>';
+    tr += '</tr>';
+    $('#table_cmd tbody').append(tr);
+    $('#table_cmd tbody tr:last').setValues(_cmd, '.cmdAttr');
+}
 
 function printEqLogic(_eqLogic) {
     if (!isset(_eqLogic)) {
@@ -32,32 +55,36 @@ function printEqLogic(_eqLogic) {
         _eqLogic.configuration = {};
     }
     if (_eqLogic.logicalId == 'list') {
+        $('.eqLogicAttr[data-l1key=configuration][data-l2key=transporteur]').val('');
         $('#colis').hide();
         $('#aftership').hide();
+        $('.eqLogicAction[data-action=remove]').hide();
+        $('.eqLogicAction[data-action=copy]').hide();
     } else {
         $('#colis').show();
+        $('.eqLogicAction[data-action=remove]').show();
+        $('.eqLogicAction[data-action=copy]').show();
         if($('.eqLogicAttr[data-l1key=configuration][data-l2key=transporteur]').value()=='aftership'){
             $('#aftership').show();
         }
     }
 }
-var transp = "";
 
-function transporteurchange(this_select) {
-    transp = this_select.value;
-    if (this_select.value == "aftership") {
+$('.eqLogicAttr[data-l1key=configuration][data-l2key=transporteur]').change(function() {
+    if ($('.eqLogicAttr[data-l1key=configuration][data-l2key=transporteur]').value() == "aftership") {
         $('#aftership').show();
     }
     else {
         $('#aftership').hide();
     }
-}
+});
 
-function rechercher(api_aftership) {
-    if (transp == "aftership") {
+
+$('.eqLogicAttr[data-l1key=configuration][data-l2key=numsuivi]').blur(function() {
+    if ($('.eqLogicAttr[data-l1key=configuration][data-l2key=transporteur]').value() == "aftership") {
         $.ajax({
             type: 'POST',
-            headers: {'aftership-api-key':api_aftership},
+            headers: {'aftership-api-key':document.getElementById('api_aftership').value},
             url: 'https://api.aftership.com/v4/couriers/detect',
             dataType: 'json',
             data: '{"tracking":{"tracking_number": "' + document.getElementById('numcolis').value + '"}}',
@@ -78,4 +105,4 @@ function rechercher(api_aftership) {
             }
         });
     }
-}
+});

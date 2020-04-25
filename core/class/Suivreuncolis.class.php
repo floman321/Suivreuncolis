@@ -319,6 +319,7 @@ class Suivreuncolis extends eqLogic {
             $cmd = $suivreUnColis->getCmd('info', 'codeetat');
         }
 
+
         if ($cmd->execCmd() != $codeetat){
 
             log::add('Suivreuncolis', 'debug', 'notif '.$notif);
@@ -350,13 +351,14 @@ class Suivreuncolis extends eqLogic {
         foreach (self::byType('Suivreuncolis') as $suivreUnColis) {
 
             if($suivreUnColis->getLogicalId() == 'list'){
-                return;
+                continue;
             }
             if ($suivreUnColis->getIsEnable() == 1) {
 
                 $nom = $suivreUnColis->getName();
                 $transnom = $suivreUnColis->getConfiguration('transporteur','');
                 $numcolis = $suivreUnColis->getConfiguration('numsuivi',0);
+                log::add('Suivreuncolis', 'debug', 'refreshdata MAJColis essai ' . $transnom . ' Nom Colis : ' . $nom);
                 $ac = $suivreUnColis->getConfiguration('autocreate',0);
                 $ad = $suivreUnColis->getConfiguration('autodelete',0);
                 $codeetatCmd =  $suivreUnColis->getCmd(null, 'codeetat');
@@ -500,7 +502,7 @@ class Suivreuncolis extends eqLogic {
         $eqLogic = eqLogic::byLogicalId('list', 'Suivreuncolis');
         if (!is_object($eqLogic)) {
             $eqLogic = new Suivreuncolis();
-            $eqLogic->setName('Liste');
+            $eqLogic->setName('Mes colis');
             $eqLogic->setLogicalId('list');
             $eqLogic->setEqType_name('Suivreuncolis');
             $eqLogic->setIsVisible(1);
@@ -509,6 +511,16 @@ class Suivreuncolis extends eqLogic {
         }
     }
 
+
+    public static function refreshList() {
+        log::add('Suivreuncolis', 'debug', '  refreshList');
+        $eqLogic = eqLogic::byLogicalId('list', 'Suivreuncolis');
+        if (is_object($eqLogic)) {
+
+            log::add('Suivreuncolis', 'debug', '  refreshListOK');
+            $eqLogic->refreshWidget();
+        }
+    }
 
     /*     * ***********************Methode static*************************** */
 
@@ -546,9 +558,7 @@ class Suivreuncolis extends eqLogic {
     }
 
     public function postInsert() {
-        if($this->getLogicalId() == 'list'){
-            return;
-        }
+        log::add('Suivreuncolis', 'debug', '   - Postinsert : '.$this->getId(). ' - '. $this->getName().' - '.$this->getLogicalId());
         $cmd = new SuivreuncolisCmd();
         $cmd->setName('Code état');
         $cmd->setLogicalId('codeetat');
@@ -556,7 +566,6 @@ class Suivreuncolis extends eqLogic {
         $cmd->setSubType('string');
         $cmd->setConfiguration('maxValue', '50');
         $cmd->setType('info');
-        $cmd->setTemplate();
         $cmd->setTemplate('dashboard', 'Suivreuncolis::codeetat');
         $cmd->setTemplate('mobile', 'Suivreuncolis::codeetat');
         $cmd->setDisplay('showNameOndashboard', 0);
@@ -596,7 +605,6 @@ class Suivreuncolis extends eqLogic {
         $cmd->setIsHistorized(0);
         $cmd->setIsVisible(1);
         $cmd->save();
-
 
 
         $cmd = new SuivreuncolisCmd();
@@ -653,6 +661,8 @@ class Suivreuncolis extends eqLogic {
         $cmd->setIsHistorized(0);
         $cmd->setIsVisible(1);
         $cmd->save();
+
+        $this->refreshList();
 
     }
 
@@ -717,7 +727,7 @@ class Suivreuncolis extends eqLogic {
         Après chaque mise à jour, si la commande est vide, elle sera masquee sur le dashboard
         */
         foreach ($this->getCmd() as $cmd) {
-            if($cmd->getLogicalId()!='codeetat'){
+            if($cmd->getLogicalId()!='codeetat' && $cmd->getLogicalId()!='refresh'){
                 if($cmd->execCmd() != ''){
                     $cmd->setIsVisible(1);
                 }else{
@@ -739,12 +749,15 @@ class Suivreuncolis extends eqLogic {
                 $cmdMsgTransporteur->save();
             }
         }
+        $this->refreshList();
     }
 
 
     public function postRemove() {
 
+        $this->refreshWidget();
         if($this->getLogicalId() == 'list'){
+
             return;
         }
         $transnom = $this->getConfiguration('transporteur','');
@@ -784,7 +797,7 @@ class Suivreuncolis extends eqLogic {
 
             curl_close ($ch);
         }
-
+        $this->refreshList();
 
     }
 
@@ -795,18 +808,35 @@ class Suivreuncolis extends eqLogic {
             'template' => 'tmplmultistate',
             'replace' => array('#_time_widget_#' => 0),
             'test' => array(
-                array('operation' => '#value#==""','state_light' => '<img src="plugins/Suivreuncolis/3rparty/status-expired.svg" height=38px width=38px />'),
-                array('operation' => '#value#==0','state_light' => '<img src="plugins/Suivreuncolis/3rparty/status-expired.svg" height=38px width=38px />'),
-                array('operation' => '#value#==5','state_light' => '<img src="plugins/Suivreuncolis/3rparty/status-info-receive.svg" height=38px width=38px />'),
-                array('operation' => '#value#==10','state_light' => '<img src="plugins/Suivreuncolis/3rparty/status-in-transit.svg" height=38px width=38px />'),
-                array('operation' => '#value#==20','state_light' => '<img src="plugins/Suivreuncolis/3rparty/status-expired.svg" height=38px width=38px />'),
-                array('operation' => '#value#==30','state_light' => '<img src="plugins/Suivreuncolis/3rparty/status-out-for-delivery.svg" height=38px width=38px />'),
-                array('operation' => '#value#==35','state_light' => '<img src="plugins/Suivreuncolis/3rparty/status-attemptfail.svg" height=38px width=38px />'),
-                array('operation' => '#value#==40','state_light' => '<img src="plugins/Suivreuncolis/3rparty/status-delivered.svg" height=38px width=38px />'),
-                array('operation' => '#value#==50','state_light' => '<img src="plugins/Suivreuncolis/3rparty/status-expired.svg" height=38px width=38px />')
+                array('operation' => '#value#==""', 'state_light' => '<img src="' . Suivreuncolis::getIconEtat('') . '" height=38px width=38px />'),
+                array('operation' => '#value#==0', 'state_light' => '<img src="' . Suivreuncolis::getIconEtat(0) . '" height=38px width=38px />'),
+                array('operation' => '#value#==5', 'state_light' => '<img src="' . Suivreuncolis::getIconEtat(5) . '" height=38px width=38px />'),
+                array('operation' => '#value#==10', 'state_light' => '<img src="' . Suivreuncolis::getIconEtat(10) . '" height=38px width=38px />'),
+                array('operation' => '#value#==20', 'state_light' => '<img src="' . Suivreuncolis::getIconEtat(20) . '" height=38px width=38px />'),
+                array('operation' => '#value#==30', 'state_light' => '<img src="' . Suivreuncolis::getIconEtat(30) . '" height=38px width=38px />'),
+                array('operation' => '#value#==35', 'state_light' => '<img src="' . Suivreuncolis::getIconEtat(35) . '" height=38px width=38px />'),
+                array('operation' => '#value#==40', 'state_light' => '<img src="' . Suivreuncolis::getIconEtat(40) . '" height=38px width=38px />'),
+                array('operation' => '#value#==50', 'state_light' => '<img src="' . Suivreuncolis::getIconEtat(50) . '" height=38px width=38px />')
             )
         );
         return $return;
+    }
+
+    private function getIconEtat($etat){
+        switch($etat){
+            case 5:
+                return 'plugins/Suivreuncolis/3rparty/status-info-receive.svg';
+            case 10:
+                return 'plugins/Suivreuncolis/3rparty/status-in-transit.svg';
+            case 30:
+                return 'plugins/Suivreuncolis/3rparty/status-out-for-delivery.svg';
+            case 35:
+                return 'plugins/Suivreuncolis/3rparty/status-attemptfail.svg';
+            case 40:
+                return 'plugins/Suivreuncolis/3rparty/status-delivered.svg';
+            default:
+                return 'plugins/Suivreuncolis/3rparty/status-expired.svg';
+        }
     }
 
     public function buildList() {
@@ -842,17 +872,41 @@ class Suivreuncolis extends eqLogic {
             $replace['#refresh_id#'] = $refresh->getId();
         }
         if ($this->getLogicalId() == 'list') {
-            $replace['#colis#'] = '<div class="container">';
+            $replace['#colis#'] = '<div class="cards">';
             $data = array();
             $eqLogics = self::byType('Suivreuncolis', true);
+            $eqLogicList = self::byLogicalId('list', 'Suivreuncolis');
+            $visibles = array();
+            if(is_object($eqLogicList)){
+                $cmds = $eqLogicList->getCmd(null, null, null);
+                foreach ($cmds as $cmd) {
+                    $visibles[$cmd->getLogicalId()] = $cmd->getIsVisible();
+                }
+            }else{
+                $visibles['etat'] = true;
+                $visibles['codeetat'] = true;
+            }
             foreach ($eqLogics as $eqLogic) {
                 if ($eqLogic->getLogicalId() == 'list') {
                     continue;
                 }
                 $data[$eqLogic->getId()] = $eqLogic->buildList();
-                $replace['#colis#'] .= '<div class="row">';
-                $replace['#colis#'] .= '<div class="col">'.$eqLogic->getName().'</div>';
-                $replace['#colis#'] .= '<div class="col">'.$data[$eqLogic->getId()]['etat'].'</div>';
+                $replace['#colis#'] .= '<div class="card">';
+                $replace['#colis#'] .= '<div class="title">';
+                if($visibles['codeetat']){
+                    $replace['#colis#'] .= '<img src="'.$this->getIconEtat($data[$eqLogic->getId()]['codeetat']).'" height=20px width=20px />';
+                }
+                $replace['#colis#'] .= '<strong>'.$eqLogic->getName().'</strong>';
+                $replace['#colis#'] .= '<span onclick="deleteColis('.$eqLogic->getId().',\''.$eqLogic->getName().'\')" class="fas fa-trash icon_red cursor eqLogicAction " data-action="remove"></span>';
+                $replace['#colis#'] .= '</div>';
+                foreach ($visibles as $key => $value) {
+                    if($value && ($key != 'codeetat' && $key != 'refresh') && $data[$eqLogic->getId()][$key] != ''){
+                        if(($key == 'etat' && $visibles['msgtransporteur']) && $data[$eqLogic->getId()]['etat'] == $data[$eqLogic->getId()]['msgtransporteur']){
+                            continue;
+                        }
+                        $replace['#colis#'] .= '<div class="status" title="'.$data[$eqLogic->getId()][$key].'">'.$data[$eqLogic->getId()][$key].'</div>';
+                    }
+                }
                 $replace['#colis#'] .= '</div>';
             }
             $replace['#colis#'] .= '</div>';

@@ -1,4 +1,37 @@
 <div class="eqLogic-widget eqLogic allowResize" style="height: #height#;width: #width#;border:#border#;border-radius:#border-radius#;background-color: #background-color#;color: #color#;#style#" data-eqLogic_id="#id#" data-eqLogic_uid="#uid#" data-version="#version#">
+    <style>
+        .card {
+            padding: 4px;
+            word-break: break-all;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card img {
+            margin-right:5px;
+        }
+
+        .card .title {
+            flex-direction: row;
+            justify-content: flex-start;
+            display: flex;
+            align-items: center;
+        }
+        .card .title strong{
+            flex-grow: 1;
+        }
+        .card .title .fa-trash{
+            display: none;
+        }
+        .cards {
+            max-width: 300px;
+            margin: 0 auto;
+            display: grid;
+            grid-gap: 4px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+    </style>
     <center class="widget-name">
     <span class="warning" title="#alert_name#">
       <i class='#alert_icon#'></i>
@@ -9,7 +42,19 @@
         <span class="reportModeVisible">#name_display# <span class="object_name">#object_name#</span></span>
         <a href="#eqLink#" class="reportModeHidden">#name_display# <span class="object_name">#object_name#</span></a>
     </center>
-    <div class="row" style="margin-right:0px;margin-left:0px">
+    <div class="row" style="margin-right:0px;margin-left:0px;overflow: auto;height: 100%;">
         #colis#
     </div>
 </div>
+
+<script>
+
+    if ('#refresh_id#' != ''){
+        $('.eqLogic[data-eqLogic_uid=#uid#] .refresh').on('click', function () {
+            jeedom.cmd.execute({id: '#refresh_id#'});
+        });
+    }else{
+        $('.eqLogic[data-eqLogic_uid=#uid#] .refresh').remove();
+    }
+
+</script>
