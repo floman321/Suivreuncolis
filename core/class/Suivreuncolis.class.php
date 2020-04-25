@@ -297,6 +297,23 @@ class Suivreuncolis extends eqLogic {
     }
 
 
+    public static function buildMessage($nom, $numcolis, $lecommentaire, $msgtransporteur, $etat, $lieu, $dateheure){
+        $format_notif = config::byKey('format_notif', 'suivreuncolis','');
+        if(!$format_notif){
+            return "Changement d'état du colis $nom N°$numcolis $lecommentaire $msgtransporteur - $etat";
+        }
+
+        $format_notif = str_replace("#etat#", $etat, $format_notif);
+        $format_notif = str_replace("#msgtransporteur#", $msgtransporteur, $format_notif);
+        $format_notif = str_replace("#dateheure#", $dateheure, $format_notif);
+        $format_notif = str_replace("#nom#", $nom, $format_notif);
+        $format_notif = str_replace("#lieu#", $lieu, $format_notif);
+        $format_notif = str_replace("#numcolis#", $numcolis, $format_notif);
+        $format_notif = str_replace("#commentaire#", $lecommentaire, $format_notif);
+        return $format_notif;
+    }
+
+
     public static function majcmdEquipement($suivreUnColis,$etat,$lieu,$dateheure,$codeetat,$msgtransporteur){
 
         $nom = $suivreUnColis->getName();
@@ -329,9 +346,10 @@ class Suivreuncolis extends eqLogic {
 
             if ($notif == "cmd"){
                 $cmd_notif = config::byKey('cmd_notif', 'suivreuncolis','');
-                $option = array('title' => 'Changement d\'état du colis '.$nom, 'message' => 'Changement d\'état du colis '.$nom.' N°'.$numcolis.' '.$lecommentaire.' '.$msgtransporteur.' - '.$etat);
+                $message = self::buildMessage($nom, $numcolis, $lecommentaire, $msgtransporteur, $etat, $lieu, $dateheure);
+                $option = array('title' => 'Changement d\'état du colis '.$nom, 'message' => $message);
 
-                log::add('Suivreuncolis', 'debug', 'notif '.$notif . ' ' .$cmd_notif);
+                log::add('Suivreuncolis', 'debug', 'notif '.$notif . ' ' .$cmd_notif . ' ' . $message);
                 //code pour palier à l'ancienne méthode de l'id direct
                 if(is_string($cmd_notif)){
                     cmd::byString($cmd_notif)->execCmd($option);

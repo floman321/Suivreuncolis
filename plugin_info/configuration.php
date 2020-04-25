@@ -75,36 +75,45 @@ if (!isConnect()) {
                     </div>
 
                 </div>
-                <div id="notifConfig" style="display : none;">
+                <div id="notifConfigCmd" style="display : none;">
                     <div class="form-group">
                         <label class="col-sm-4 control-label">{{Action avec type message}}</label>
                         <div class="col-sm-4">
                             <div class="input-group">
                                 <input class="form-control configKey input-sm" data-l1key="cmd_notif"/>
                                 <span class="input-group-btn">
-                          <a class="btn btn-default btn-sm listCmdInfo btn-warning" data-input="cmd_notif"><i
-                                      class="fa fa-list-alt"></i></a>
-                      </span>
+                                  <a class="btn btn-default btn-sm listCmdInfo btn-warning" data-input="cmd_notif"><i class="fa fa-list-alt"></i></a>
+                              </span>
                             </div>
                         </div>
                     </div>
                 </div>
+                <div id="notifConfig" style="display : none;">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">{{Format du message}} <sup><i class="fas fa-question-circle" title="{{Vous pouvez utiliser les tags #etat#, #msgtransporteur#, #dateheure#, #nom#, #lieu#, #commentaire# et #numcolis#}}"></i></sup></label>
+                        <div class="col-sm-4">
+                            <input class="form-control configKey input-sm" data-l1key="format_notif"/>
 
-
+                        </div>
+                    </div>
+                </div>
             </fieldset>
-
-
         </form>
         <script>
 
             $('#notifType').on('change', function () {
                 if ($(this).value() == 'cmd') {
+                    $('#notifConfigCmd').show();
+                } else {
+                    $('#notifConfigCmd').hide();
+                }
+                if ($(this).value() != '') {
                     $('#notifConfig').show();
                 } else {
                     $('#notifConfig').hide();
                 }
             });
-            $("#notifConfig").delegate(".listCmdInfo", 'click', function () {
+            $("#notifConfigCmd").delegate(".listCmdInfo", 'click', function () {
                 var el = $('.configKey[data-l1key=' + $(this).attr('data-input') + ']');
                 jeedom.cmd.getSelectModal({cmd: {type: 'action', subtype: 'message'}}, function (result) {
                     el.atCaret('insert', result.human);
