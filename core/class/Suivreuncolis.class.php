@@ -927,5 +927,3 @@ class SuivreuncolisCmd extends cmd {
         }
     }
 }
-
-?>
