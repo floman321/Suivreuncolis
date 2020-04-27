@@ -353,7 +353,9 @@ class Suivreuncolis extends eqLogic {
                 //code pour palier à l'ancienne méthode de l'id direct
                 if(is_string($cmd_notif)){
                     foreach (explode('&&', $cmd_notif) as $c){
-                        cmd::byString($c)->execCmd($option);
+                        if($c != ''){
+                            cmd::byString($c)->execCmd($option);
+                        }
                     }
                 }else{
                     cmd::byId($cmd_notif)->execCmd($option);
