@@ -18,17 +18,60 @@
 
 require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
 
-function Suivreuncolis_install() {
-    
+function Suivreuncolis_install()
+{
+
 }
 
-function Suivreuncolis_update() {
-    
+function Suivreuncolis_update()
+{
+    Suivreuncolis::createListEqLogic();
+    /*
+        Code temporaire, à la mise à jour du plugin,
+        je place les logicalId afin de pouvoir rechercher les commandes facilement.
+        Je met également le widget sur le codeetat
+    */
+    foreach (eqLogic::byType('Suivreuncolis') as $eqLogic) {
+        if($eqLogic->getLogicalId() == 'list'){
+            continue;
+        }
+        $cmds = $eqLogic->getCmd();
+        foreach ($cmds as $cmd) {
+            if ($cmd->getName() == 'codeetat') {
+                $cmd->setLogicalId('codeetat');
+                $cmd->setSubType('string');
+                $cmd->setTemplate('dashboard', 'Suivreuncolis::codeetat');
+                $cmd->setTemplate('mobile', 'Suivreuncolis::codeetat');
+                $cmd->setOrder(1);
+            } else if ($cmd->getName() == 'etat') {
+                $cmd->setLogicalId('etat');
+                $cmd->setOrder(2);
+            } else if ($cmd->getName() == 'msgtransporteur') {
+                $cmd->setLogicalId('msgtransporteur');
+                $cmd->setOrder(3);
+            } else if ($cmd->getName() == 'lieu') {
+                $cmd->setLogicalId('lieu');
+                $cmd->setOrder(4);
+            } else if ($cmd->getName() == 'moncommentaire') {
+                $cmd->setLogicalId('moncommentaire');
+                $cmd->setOrder(5);
+            } else if ($cmd->getName() == 'dateheure') {
+                $cmd->setLogicalId('dateheure');
+                $cmd->setOrder(6);
+            }
+
+            $cmd->setDisplay('showNameOndashboard', 0);
+            $cmd->setDisplay('showNameOnmobile', 0);
+            $cmd->setDisplay('showIconAndNamedashboard', 0);
+            $cmd->setDisplay('showIconAndNamemobile', 0);
+            $cmd->save();
+        }
+    }
 }
 
 
-function Suivreuncolis_remove() {
-    
+function Suivreuncolis_remove()
+{
+
 }
 
-?>
