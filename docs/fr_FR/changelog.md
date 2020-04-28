@@ -1,4 +1,10 @@
 Changelog : 
+
+28/04/2020
+- Ajout d'un widget résumé
+- Ajout d'un nouveau statut colis pret au point relais (AfterShip).
+- Personalisation du message au changement de statut du colis.
+
 18/04/2020
 - Suppression du service 17tracks (indisponible)
 - On peut récupérer les informations de Aftership sans renseigner les informations (Transporteur etc ...) dans Jeedom
