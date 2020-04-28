@@ -196,6 +196,9 @@ class Suivreuncolis extends eqLogic {
                             case 'Delivered':
                                 $codetat = 40;
                                 break;
+                            case 'AvailableForPickup':
+                                $codetat = 40;
+                                break;
                             case 'Exception':
                                 $codetat = 50;
                                 break;
