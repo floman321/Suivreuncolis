@@ -305,7 +305,11 @@ class Suivreuncolis extends eqLogic {
 
         $format_notif = str_replace("#etat#", $etat, $format_notif);
         $format_notif = str_replace("#msgtransporteur#", $msgtransporteur, $format_notif);
-        $format_notif = str_replace("#dateheure#", $dateheure, $format_notif);
+        if(isset($dateheure) && $dateheure){
+            $format_notif = str_replace("#dateheure#", date(config::byKey('format_date', 'Suivreuncolis', 'd/m/Y H:i'), strtotime($dateheure)), $format_notif);
+        }else{
+            $format_notif = str_replace("#dateheure#", '', $format_notif);
+        }
         $format_notif = str_replace("#nom#", $nom, $format_notif);
         $format_notif = str_replace("#lieu#", $lieu, $format_notif);
         $format_notif = str_replace("#numcolis#", $numcolis, $format_notif);
@@ -575,6 +579,7 @@ class Suivreuncolis extends eqLogic {
         }else{
             $this->setObject_id($objetpardefaut);
         }
+        $this->setIsEnable(1);
     }
 
     public function postInsert() {
@@ -924,7 +929,11 @@ class Suivreuncolis extends eqLogic {
                         if(($key == 'etat' && $visibles['msgtransporteur']) && $data[$eqLogic->getId()]['etat'] == $data[$eqLogic->getId()]['msgtransporteur']){
                             continue;
                         }
-                        $replace['#colis#'] .= '<div class="status" title="'.$data[$eqLogic->getId()][$key].'">'.$data[$eqLogic->getId()][$key].'</div>';
+                        if($key == 'dateheure'){
+                            $replace['#colis#'] .= '<div class="status" title="'.$data[$eqLogic->getId()][$key].'">'.date(config::byKey('format_date', 'Suivreuncolis', 'd/m/Y H:i'), strtotime($data[$eqLogic->getId()][$key])).'</div>';
+                        }else{
+                            $replace['#colis#'] .= '<div class="status" title="'.$data[$eqLogic->getId()][$key].'">'.$data[$eqLogic->getId()][$key].'</div>';
+                        }
                     }
                 }
                 $replace['#colis#'] .= '</div>';
@@ -932,7 +941,48 @@ class Suivreuncolis extends eqLogic {
             $replace['#colis#'] .= '</div>';
             return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, 'Suivreuncolis_list', 'Suivreuncolis')));
         } else {
-            return parent::toHtml($_version);
+            $cmd_html = '';
+            $br_before = 0;
+            foreach ($this->getCmd(null, null, true) as $cmd) {
+                if (isset($replace['#refresh_id#']) && $cmd->getId() == $replace['#refresh_id#']) {
+                    continue;
+                }
+                if ($cmd->execCmd() == '') {
+                    continue;
+                }
+                if ($br_before == 0 && $cmd->getDisplay('forceReturnLineBefore', 0) == 1) {
+                    $cmd_html .= '<br/>';
+                }
+                $replaceCmd = array(
+                    '#id#' => $cmd->getId(),
+                    '#name#' => $cmd->getName(),
+                    '#name_display#' => ($cmd->getDisplay('icon') != '') ? $cmd->getDisplay('icon') : $cmd->getName(),
+                    '#history#' => '',
+                    '#hide_history#' => 'hidden',
+                    '#logicalId#' => $cmd->getLogicalId(),
+                    '#uid#' => 'cmd' . $cmd->getId() . eqLogic::UIDDELIMITER . mt_rand() . eqLogic::UIDDELIMITER,
+                    '#version#' => $_version,
+                    '#eqLogic_id#' => $cmd->getEqLogic_id(),
+                    '#hide_name#' => ''
+                );
+                if ($cmd->getDisplay('showNameOn' . $_version, 1) == 0) {
+                    $replaceCmd['#hide_name#'] = 'hidden';
+                }
+                if ($cmd->getDisplay('showIconAndName' . $_version, 0) == 1) {
+                    $replaceCmd['#name_display#'] = $cmd->getDisplay('icon') . ' ' . $cmd->getName();
+                }
+                $template = $cmd->getWidgetTemplateCode($_version);
+                $replaceCmd['#state#'] = ($replaceCmd['#logicalId#'] == 'dateheure' ? date(config::byKey('format_date', 'Suivreuncolis', 'd/m/Y H:i'), strtotime($cmd->execCmd())) : $cmd->execCmd());
+                $replaceCmd['#valueName#'] = $cmd->getName();
+                $cmd_html .= translate::exec(template_replace($replaceCmd, $template), 'core/template/widgets.html');
+                $br_before = 0;
+                if ($cmd->getDisplay('forceReturnLineAfter', 0) == 1) {
+                    $cmd_html .= '<br/>';
+                    $br_before = 1;
+                }
+            }
+            $replace['#cmd#'] = $cmd_html;
+            return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, 'eqLogic')));
         }
     }
 
