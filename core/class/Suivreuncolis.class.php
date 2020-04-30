@@ -921,7 +921,11 @@ class Suivreuncolis extends eqLogic {
                 if($visibles['codeetat']){
                     $replace['#colis#'] .= '<img src="'.$this->getIconEtat($data[$eqLogic->getId()]['codeetat']).'" height=20px width=20px />';
                 }
-                $replace['#colis#'] .= '<strong>'.$eqLogic->getName().'</strong>';
+                if($version == 'dashboard'){
+                    $replace['#colis#'] .= '<a href="'.$eqLogic->getLinkToConfiguration().'" class="objectName">'.$eqLogic->getName().'</a>';
+                }else{
+                    $replace['#colis#'] .= '<span class="objectName">'.$eqLogic->getName().'</span>';
+                }
                 $replace['#colis#'] .= '<span onclick="deleteColis('.$eqLogic->getId().',\''.$eqLogic->getName().'\')" class="fas fa-trash icon_red cursor eqLogicAction " data-action="remove"></span>';
                 $replace['#colis#'] .= '</div>';
                 foreach ($visibles as $key => $value) {
