@@ -97,6 +97,14 @@ if (!isConnect()) {
                         </div>
                     </div>
                 </div>
+                <div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">{{Format de date}} <sup><a href="https://www.php.net/manual/fr/function.date.php" target="_blank"><i class="fas fa-question-circle" title="{{Format d'affichage des dates. Veuillez consulter la documentation PHP}}"></i></a></sup></label>
+                        <div class="col-sm-4">
+                            <input class="form-control configKey input-sm" data-l1key="format_date"/>
+                        </div>
+                    </div>
+                </div>
             </fieldset>
         </form>
         <script>
