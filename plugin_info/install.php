@@ -20,7 +20,7 @@ require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
 
 function Suivreuncolis_install()
 {
-
+    Suivreuncolis::createListEqLogic();
 }
 
 function Suivreuncolis_update()
