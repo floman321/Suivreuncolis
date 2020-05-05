@@ -982,7 +982,8 @@ class Suivreuncolis extends eqLogic {
                 }
                 $template = $cmd->getWidgetTemplateCode($_version);
                 $replaceCmd['#state#'] = ($replaceCmd['#logicalId#'] == 'dateheure' ? date(config::byKey('format_date', 'Suivreuncolis', 'd/m/Y H:i'), strtotime($cmd->execCmd())) : $cmd->execCmd());
-                $replaceCmd['#valueName#'] = $cmd->getName();
+				$replaceCmd['#state#'] = str_replace(array("\'", "'"), array("'", "\'"), $replaceCmd['#state#']);
+				$replaceCmd['#valueName#'] = $cmd->getName();
                 $cmd_html .= translate::exec(template_replace($replaceCmd, $template), 'core/template/widgets.html');
                 $br_before = 0;
                 if ($cmd->getDisplay('forceReturnLineAfter', 0) == 1) {
