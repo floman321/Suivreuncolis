@@ -962,29 +962,33 @@ class Suivreuncolis extends eqLogic {
                 if ($br_before == 0 && $cmd->getDisplay('forceReturnLineBefore', 0) == 1) {
                     $cmd_html .= '<br/>';
                 }
-                $replaceCmd = array(
-                    '#id#' => $cmd->getId(),
-                    '#name#' => $cmd->getName(),
-                    '#name_display#' => ($cmd->getDisplay('icon') != '') ? $cmd->getDisplay('icon') : $cmd->getName(),
-                    '#history#' => '',
-                    '#hide_history#' => 'hidden',
-                    '#logicalId#' => $cmd->getLogicalId(),
-                    '#uid#' => 'cmd' . $cmd->getId() . eqLogic::UIDDELIMITER . mt_rand() . eqLogic::UIDDELIMITER,
-                    '#version#' => $_version,
-                    '#eqLogic_id#' => $cmd->getEqLogic_id(),
-                    '#hide_name#' => ''
-                );
-                if ($cmd->getDisplay('showNameOn' . $_version, 1) == 0) {
-                    $replaceCmd['#hide_name#'] = 'hidden';
+                if ($cmd->getLogicalId() == 'dateheure') {
+                    $replaceCmd = array(
+                        '#id#' => $cmd->getId(),
+                        '#name#' => $cmd->getName(),
+                        '#name_display#' => ($cmd->getDisplay('icon') != '') ? $cmd->getDisplay('icon') : $cmd->getName(),
+                        '#history#' => '',
+                        '#hide_history#' => 'hidden',
+                        '#logicalId#' => $cmd->getLogicalId(),
+                        '#uid#' => 'cmd' . $cmd->getId() . eqLogic::UIDDELIMITER . mt_rand() . eqLogic::UIDDELIMITER,
+                        '#version#' => $_version,
+                        '#eqLogic_id#' => $cmd->getEqLogic_id(),
+                        '#hide_name#' => ''
+                    );
+                    if ($cmd->getDisplay('showNameOn' . $_version, 1) == 0) {
+                        $replaceCmd['#hide_name#'] = 'hidden';
+                    }
+                    if ($cmd->getDisplay('showIconAndName' . $_version, 0) == 1) {
+                        $replaceCmd['#name_display#'] = $cmd->getDisplay('icon') . ' ' . $cmd->getName();
+                    }
+                    $template = $cmd->getWidgetTemplateCode($_version);
+                    $replaceCmd['#state#'] = ($replaceCmd['#logicalId#'] == 'dateheure' ? date(config::byKey('format_date', 'Suivreuncolis', 'd/m/Y H:i'), strtotime($cmd->execCmd())) : $cmd->execCmd());
+                    $replaceCmd['#state#'] = str_replace(array("\'", "'","\n"), array("'", "\'",'<br/>'), $replaceCmd['#state#']);
+                    $replaceCmd['#valueName#'] = $cmd->getName();
+                    $cmd_html .= translate::exec(template_replace($replaceCmd, $template), 'core/template/widgets.html');
+                }else{
+                    $cmd_html .= $cmd->toHtml($_version);
                 }
-                if ($cmd->getDisplay('showIconAndName' . $_version, 0) == 1) {
-                    $replaceCmd['#name_display#'] = $cmd->getDisplay('icon') . ' ' . $cmd->getName();
-                }
-                $template = $cmd->getWidgetTemplateCode($_version);
-                $replaceCmd['#state#'] = ($replaceCmd['#logicalId#'] == 'dateheure' ? date(config::byKey('format_date', 'Suivreuncolis', 'd/m/Y H:i'), strtotime($cmd->execCmd())) : $cmd->execCmd());
-				$replaceCmd['#state#'] = str_replace(array("\'", "'"), array("'", "\'"), $replaceCmd['#state#']);
-				$replaceCmd['#valueName#'] = $cmd->getName();
-                $cmd_html .= translate::exec(template_replace($replaceCmd, $template), 'core/template/widgets.html');
                 $br_before = 0;
                 if ($cmd->getDisplay('forceReturnLineAfter', 0) == 1) {
                     $cmd_html .= '<br/>';
@@ -995,8 +999,6 @@ class Suivreuncolis extends eqLogic {
             return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, 'eqLogic')));
         }
     }
-
-
 }
 
 class SuivreuncolisCmd extends cmd {
