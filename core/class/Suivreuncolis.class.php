@@ -482,7 +482,7 @@ class Suivreuncolis extends eqLogic {
                             $nom=$moncolis['title'];
                         }
                         log::add('Suivreuncolis', 'debug', ' => Importation 1 colis depuis AfterShip : '.$moncolis['tracking_number'].'-'.$nom);
-                        if ($moncolis['shipment_delivery_date'] == null) {
+                        if ($moncolis['shipment_delivery_date'] == null && $moncolis['tag'] != 'Delivered') {
                             log::add('Suivreuncolis', 'debug', '   - Colis non livré import');
                             $mynewcolis = null;
                             $mynewcolis = new self();
