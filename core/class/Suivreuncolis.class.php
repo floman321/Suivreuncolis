@@ -66,6 +66,75 @@ class Suivreuncolis extends eqLogic {
 
     function LaPosteRecupere ($NumEnvoi) {
 
+        $apikey = config::byKey('api_laposte', 'suivreuncolis','LaPosteRecupere');
+
+        if ($apikey == ''){
+            log::add('Suivreuncolis', 'error', 'Api key La poste manquante'.$apikey );
+            return array("","","","","");
+        }
+
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL,"https://api.laposte.fr/suivi/v2/idships/$NumEnvoi?lang=fr_FR");
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+        curl_setopt($ch,CURLOPT_HTTPHEADER,array('Accept: application/json','X-Forwarded-For: 123.123.123.123','X-Okapi-Key: '.$apikey));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        if( ! $server_output = curl_exec($ch)) {
+
+            log::add('Suivreuncolis', 'debug', 'httperror laposte' . "https://api.laposte.fr/suivi/v2/idships/$NumEnvoi?lang=fr_FR");
+
+            return array("","","","");
+        }else{
+
+            $data = json_decode($server_output, true);
+
+            if ($data['returnCode'] == '200' ){
+
+                log::add('Suivreuncolis', 'debug', '    debug info decompile '.$server_output);
+
+                $monitem = $data['shipment']['event'][0];
+                $dh = str_replace('T',' ',str_replace('T00:00:00','',$monitem['date']));
+                $msg = $monitem['label'];
+                $lieu = '';
+                $statusbrut = $monitem['code'];
+
+                if ($statusbrut == '') $codetat = 0;
+                if ($statusbrut == 'PC1' || $statusbrut == 'PC2' || $statusbrut == 'DR1' ) $codetat = 5;
+                if ($statusbrut == 'ET1' || $statusbrut == 'ET2' || $statusbrut == 'ET3' || $statusbrut == 'ET4' || $statusbrut == 'DO2' || $statusbrut == 'DO1' ) $codetat = 10;
+                if ($statusbrut == 'DO3' || $statusbrut == 'PB1' || $statusbrut == 'PB2') $codetat = 50;
+                if ($statusbrut == 'ND1' || $statusbrut == 'RE1' ) $codetat = 35;
+                if ($statusbrut == 'MD2' || $statusbrut == 'EP1' ) $codetat = 30;
+                if ($statusbrut == 'DI1' || $statusbrut == 'DI1' || $statusbrut == 'AG1' ) $codetat = 40;
+
+                log::add('Suivreuncolis', 'debug', '    debug status '.$statusbrut);
+
+                return array($msg,$lieu,$dh,$codetat,$msg);
+
+            }else{
+                log::add('Suivreuncolis', 'debug', 'httpok laposte code error'. $data['returnCode'] );
+                $msg = $data['returnMessage'];
+                $codetat = 50;
+                $lieu = '';
+                $dh = '';
+                //return array($msg,$lieu,$dh,$codetat,$msg);
+                return array('','','');
+            }
+
+        }
+
+
+        return array('','','');
+    }
+  
+  
+  
+  
+  
+  
+   function UPSRecupere ($NumEnvoi) {
+
         $apikey = config::byKey('api_laposte', 'suivreuncolis','');
 
         if ($apikey == ''){
@@ -126,6 +195,10 @@ class Suivreuncolis extends eqLogic {
 
         return array('','','');
     }
+  
+  
+  
+  
 
     function AfterShipRecupere () {
 
@@ -331,10 +404,19 @@ class Suivreuncolis extends eqLogic {
         log::add('Suivreuncolis', 'debug', 'majcmdEquipement '.$nom);
 
         //Simplification de la mise à jour des commandes
-        $suivreUnColis->checkAndUpdateCmd('lieu', $lieu);
-        $suivreUnColis->checkAndUpdateCmd('dateheure', $dateheure);
-        $suivreUnColis->checkAndUpdateCmd('etat', $etat);
-        $suivreUnColis->checkAndUpdateCmd('msgtransporteur', $msgtransporteur);
+        if ($suivreUnColis->checkAndUpdateCmd('lieu', $lieu)){
+          log::add('Suivreuncolis', 'debug', 'majcmdEquipement New lieu : '.$lieu);
+        }
+        if($suivreUnColis->checkAndUpdateCmd('dateheure', $dateheure)){
+          log::add('Suivreuncolis', 'debug', 'majcmdEquipement New dateheure : '.$dateheure);
+        }
+        if($suivreUnColis->checkAndUpdateCmd('etat', $etat)){
+          log::add('Suivreuncolis', 'debug', 'majcmdEquipement New etat : '.$etat);
+        }
+        if($suivreUnColis->checkAndUpdateCmd('msgtransporteur', $msgtransporteur)){
+        	log::add('Suivreuncolis', 'debug', 'majcmdEquipement New msgtransporteur : '.$msgtransporteur);
+        }
+        
         //cas particulier pour le codeetat
         $cmd = $suivreUnColis->getCmd('info', 'codeetat');
         //si le logicalId n'a pas été mis à jour, sauvegarde de l'eqLogic afin de mettre à jour les logicalId.
@@ -342,7 +424,6 @@ class Suivreuncolis extends eqLogic {
             $suivreUnColis->save();
             $cmd = $suivreUnColis->getCmd('info', 'codeetat');
         }
-
 
         if ($cmd->execCmd() != $codeetat){
 
@@ -376,7 +457,12 @@ class Suivreuncolis extends eqLogic {
 
 
     public static function MAJColis() {
-        Suivreuncolis::AfterShipRecupere();
+      
+      log::add('Suivreuncolis', 'debug', ' ');
+      log::add('Suivreuncolis', 'debug', ' MAJColis() ..........................');
+      
+      Suivreuncolis::AfterShipRecupere();
+      
         foreach (self::byType('Suivreuncolis') as $suivreUnColis) {
 
             if($suivreUnColis->getLogicalId() == 'list'){
@@ -387,7 +473,9 @@ class Suivreuncolis extends eqLogic {
                 $nom = $suivreUnColis->getName();
                 $transnom = $suivreUnColis->getConfiguration('transporteur','');
                 $numcolis = $suivreUnColis->getConfiguration('numsuivi',0);
-                log::add('Suivreuncolis', 'debug', 'refreshdata MAJColis essai ' . $transnom . ' Nom Colis : ' . $nom);
+              
+                log::add('Suivreuncolis', 'debug', 'refreshdata MAJColis step 1 ' . $transnom . ' Nom Colis : ' . $nom);
+              
                 $ac = $suivreUnColis->getConfiguration('autocreate',0);
                 $ad = $suivreUnColis->getConfiguration('autodelete',0);
                 $codeetatCmd =  $suivreUnColis->getCmd(null, 'codeetat');
@@ -403,7 +491,7 @@ class Suivreuncolis extends eqLogic {
                 if ($numcolis == '') continue;
 
 
-                log::add('Suivreuncolis', 'debug', 'refreshdata MAJColis essai '.$transnom.' Nom Colis : '.$nom);
+                log::add('Suivreuncolis', 'debug', 'refreshdata MAJColis step 2 '.$transnom.' Nom Colis : '.$nom);
                 log::add('Suivreuncolis', 'debug', '  AutoCreate = '.$ac.' AutoDelete : '.$ad);
 
                 //Si le colis est livré depuis 15 jours, alors on le supprime de la liste
@@ -428,11 +516,19 @@ class Suivreuncolis extends eqLogic {
                         break;
                     case "laposte":
                         list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::LaPosteRecupere($numcolis);
+                        if ($etat != ''){
+                        	Suivreuncolis::majcmdEquipement($suivreUnColis,$etat,$lieu,$dateheure,$codeetat,$msgtransporteur);
+                        }
+                        break;
+                    case "ups":
+                        list($etat,$lieu,$dateheure,$codeetat,$msgtransporteur) = Suivreuncolis::UPSRecupere($numcolis);
                         Suivreuncolis::majcmdEquipement($suivreUnColis,$etat,$lieu,$dateheure,$codeetat,$msgtransporteur);
                         break;
                 }
             }
         }
+      
+      log::add('Suivreuncolis', 'debug', ' END ..........................');
 
     }
 
@@ -482,7 +578,7 @@ class Suivreuncolis extends eqLogic {
                             $nom=$moncolis['title'];
                         }
                         log::add('Suivreuncolis', 'debug', ' => Importation 1 colis depuis AfterShip : '.$moncolis['tracking_number'].'-'.$nom);
-                        if ($moncolis['shipment_delivery_date'] == null) {
+                        if ($moncolis['shipment_delivery_date'] == null && $moncolis['tag'] != 'Delivered') {
                             log::add('Suivreuncolis', 'debug', '   - Colis non livré import');
                             $mynewcolis = null;
                             $mynewcolis = new self();
@@ -553,12 +649,11 @@ class Suivreuncolis extends eqLogic {
 
     /*     * ***********************Methode static*************************** */
 
-    /*
+    
     // * Fonction exécutée automatiquement toutes les minutes par Jeedom
      public static function cron() {
-        Suivreuncolis::MAJColis();
-
-     }*/
+        //Suivreuncolis::MAJColis();
+     }
 
 
     //* Fonction exécutée automatiquement toutes les heures par Jeedom
@@ -962,28 +1057,33 @@ class Suivreuncolis extends eqLogic {
                 if ($br_before == 0 && $cmd->getDisplay('forceReturnLineBefore', 0) == 1) {
                     $cmd_html .= '<br/>';
                 }
-                $replaceCmd = array(
-                    '#id#' => $cmd->getId(),
-                    '#name#' => $cmd->getName(),
-                    '#name_display#' => ($cmd->getDisplay('icon') != '') ? $cmd->getDisplay('icon') : $cmd->getName(),
-                    '#history#' => '',
-                    '#hide_history#' => 'hidden',
-                    '#logicalId#' => $cmd->getLogicalId(),
-                    '#uid#' => 'cmd' . $cmd->getId() . eqLogic::UIDDELIMITER . mt_rand() . eqLogic::UIDDELIMITER,
-                    '#version#' => $_version,
-                    '#eqLogic_id#' => $cmd->getEqLogic_id(),
-                    '#hide_name#' => ''
-                );
-                if ($cmd->getDisplay('showNameOn' . $_version, 1) == 0) {
-                    $replaceCmd['#hide_name#'] = 'hidden';
+                if ($cmd->getLogicalId() == 'dateheure') {
+                    $replaceCmd = array(
+                        '#id#' => $cmd->getId(),
+                        '#name#' => $cmd->getName(),
+                        '#name_display#' => ($cmd->getDisplay('icon') != '') ? $cmd->getDisplay('icon') : $cmd->getName(),
+                        '#history#' => '',
+                        '#hide_history#' => 'hidden',
+                        '#logicalId#' => $cmd->getLogicalId(),
+                        '#uid#' => 'cmd' . $cmd->getId() . eqLogic::UIDDELIMITER . mt_rand() . eqLogic::UIDDELIMITER,
+                        '#version#' => $_version,
+                        '#eqLogic_id#' => $cmd->getEqLogic_id(),
+                        '#hide_name#' => ''
+                    );
+                    if ($cmd->getDisplay('showNameOn' . $_version, 1) == 0) {
+                        $replaceCmd['#hide_name#'] = 'hidden';
+                    }
+                    if ($cmd->getDisplay('showIconAndName' . $_version, 0) == 1) {
+                        $replaceCmd['#name_display#'] = $cmd->getDisplay('icon') . ' ' . $cmd->getName();
+                    }
+                    $template = $cmd->getWidgetTemplateCode($_version);
+                    $replaceCmd['#state#'] = ($replaceCmd['#logicalId#'] == 'dateheure' ? date(config::byKey('format_date', 'Suivreuncolis', 'd/m/Y H:i'), strtotime($cmd->execCmd())) : $cmd->execCmd());
+                    $replaceCmd['#state#'] = str_replace(array("\'", "'","\n"), array("'", "\'",'<br/>'), $replaceCmd['#state#']);
+                    $replaceCmd['#valueName#'] = $cmd->getName();
+                    $cmd_html .= translate::exec(template_replace($replaceCmd, $template), 'core/template/widgets.html');
+                }else{
+                    $cmd_html .= $cmd->toHtml($_version);
                 }
-                if ($cmd->getDisplay('showIconAndName' . $_version, 0) == 1) {
-                    $replaceCmd['#name_display#'] = $cmd->getDisplay('icon') . ' ' . $cmd->getName();
-                }
-                $template = $cmd->getWidgetTemplateCode($_version);
-                $replaceCmd['#state#'] = ($replaceCmd['#logicalId#'] == 'dateheure' ? date(config::byKey('format_date', 'Suivreuncolis', 'd/m/Y H:i'), strtotime($cmd->execCmd())) : $cmd->execCmd());
-                $replaceCmd['#valueName#'] = $cmd->getName();
-                $cmd_html .= translate::exec(template_replace($replaceCmd, $template), 'core/template/widgets.html');
                 $br_before = 0;
                 if ($cmd->getDisplay('forceReturnLineAfter', 0) == 1) {
                     $cmd_html .= '<br/>';
@@ -994,8 +1094,6 @@ class Suivreuncolis extends eqLogic {
             return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, 'eqLogic')));
         }
     }
-
-
 }
 
 class SuivreuncolisCmd extends cmd {

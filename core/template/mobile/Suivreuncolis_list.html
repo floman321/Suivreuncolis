@@ -1,31 +1,31 @@
 <div class="eqLogic-widget eqLogic allowResize" style="height: #height#;width: #width#;border:#border#;border-radius:#border-radius#;background-color: #background-color#;color: #color#;#style#" data-eqLogic_id="#id#" data-eqLogic_uid="#uid#" data-version="#version#">
     <style>
-        .card {
+        .eqLogic[data-eqLogic_uid=#uid#] .card {
             padding: 4px;
             word-break: break-all;
-            white-space: nowrap;
+          	white-space: break-spaces;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .card img {
+        .eqLogic[data-eqLogic_uid=#uid#] .card img {
             margin-right:5px;
         }
 
-        .card .title {
+        .eqLogic[data-eqLogic_uid=#uid#] .card .title {
             flex-direction: row;
             justify-content: flex-start;
             display: flex;
             align-items: center;
         }
-        .card .title .objectName{
+        .eqLogic[data-eqLogic_uid=#uid#] .card .title .objectName{
             flex-grow: 1;
             font-weight:bold;
         }
-        .card .title .fa-trash{
+        .eqLogic[data-eqLogic_uid=#uid#] .card .title .fa-trash{
             display: none;
         }
-        .cards {
+        .eqLogic[data-eqLogic_uid=#uid#] .cards {
             max-width: 300px;
             margin: 0 auto;
             display: grid;
@@ -43,7 +43,7 @@
         <span class="reportModeVisible">#name_display# <span class="object_name">#object_name#</span></span>
         <a href="#eqLink#" class="reportModeHidden">#name_display# <span class="object_name">#object_name#</span></a>
     </center>
-    <div class="row" style="margin-right:0px;margin-left:0px;overflow: auto;height: 100%;">
+    <div class="row" style="margin-right:0px;margin-left:0px;overflow: auto;height: calc(100% - 25px);">
         #colis#
     </div>
 </div>

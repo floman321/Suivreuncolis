@@ -138,12 +138,13 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Transporteur</label>
                                     <div class="col-sm-3">
-                                        <select id="sel_object" class="eqLogicAttr form-control" data-l1key="configuration"
+                                        <select id="sel_transporteur" class="eqLogicAttr form-control" data-l1key="configuration"
                                                 data-l2key="transporteur">
                                             <option value='aftership'>AfterShip</option>
                                             <option value='laposte'>La Poste</option>
                                             <option value='sky56'>Sky56</option>
                                             <option value='aliexpress'>AliExpress Shipping</option>
+                                            <option value='UPS'>UPS</option>
                                         </select>
 
                                     </div>
