@@ -144,6 +144,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                             <option value='laposte'>La Poste</option>
                                             <option value='sky56'>Sky56</option>
                                             <option value='aliexpress'>AliExpress Shipping</option>
+                                            <option value='UPS'>UPS</option>
                                         </select>
 
                                     </div>
