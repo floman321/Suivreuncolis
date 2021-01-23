@@ -37,7 +37,7 @@ if (!isConnect()) {
             <fieldset>
                 <div class="form-group">
                     <label class="col-sm-4 control-label">Cle API LaPoste : (<a
-                                href="https://developer.laposte.fr/products/suivi/latest">Lien vers formuluraire</a>)
+                                href="https://developer.laposte.fr/products/suivi/latest">Lien vers formulaire</a>)
                     </label>
                     <div class="col-sm-4">
                         <input class="configKey form-control" data-l1key="api_laposte"/>
