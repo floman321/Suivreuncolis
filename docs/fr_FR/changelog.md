@@ -1,5 +1,8 @@
 Changelog : 
 
+23/01/2021:
+Correction doublon message de notification sur le module laposte
+
 28/04/2020
 - Ajout d'un widget résumé
 - Ajout d'un nouveau statut colis pret au point relais (AfterShip).
