@@ -749,7 +749,7 @@ class Suivreuncolis extends eqLogic {
 
         $cmd = new SuivreuncolisCmd();
         $cmd->setName('Commentaire');
-        $cmd->setLogicalId('moncommentaire');
+        $cmd->setLogicalId('commentaire');
         $cmd->setEqLogic_id($this->getId());
         $cmd->setSubType('string');
         $cmd->setType('info');
@@ -820,7 +820,6 @@ class Suivreuncolis extends eqLogic {
 
             $nom = $this->getName();
             $numcolis = $this->getConfiguration('numsuivi',0);
-            $lecommentaire = $this->getConfiguration('commentaire','');
             $transporteurAftership = $this->getConfiguration('transaftership','');
             $cp = $this->getConfiguration('cp_aftership','');
 
@@ -836,8 +835,11 @@ class Suivreuncolis extends eqLogic {
                 log::add('Suivreuncolis', 'debug', 'httperror '.$server_output);
 
             }else{
-                log::add('Suivreuncolis', 'debug', 'Enregistre ok'.$server_output );
+                log::add('Suivreuncolis', 'debug', 'Enregistre ok'.$server_output);
             }
+          
+            $this->checkAndUpdateCmd($this->getCmd(null, 'commentaire'),$this->getConfiguration('commentaire',''));
+
 
             curl_close ($ch);
         }
