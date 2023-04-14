@@ -246,6 +246,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                             <option value='budbee-webhook'>Budbee</option>
                                             <option value='buylogic'>Buylogic</option>
                                             <option value='cae-delivers'>CAE Delivers</option>
+                                            <option value='cainiao'>Cainiao</option>
                                             <option value='cambodia-post'>Cambodia Post</option>
                                             <option value='canada-post'>Canada Post</option>
                                             <option value='canpar'>Canpar Courier</option>
